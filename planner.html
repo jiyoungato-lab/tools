@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>원시트 기획서 시스템 v3.1</title>
+<!--
+  v3.1 변경 사항:
+  · 결과물 이미지 다중 업로드 (최대 6장) — 각 캡션 입력, 추가/삭제
+  · 3P 레이아웃 자동 적응: 이미지 수에 따라 1컬럼(크게) / 2열 / 3열 그리드
+  · 프로젝트 저장/불러오기 — localStorage 다중 저장, 이름 지정, 목록 관리
+  · 프로젝트 저장 시 이미지 포함 (개별 키 분리)
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"/>
+<style>
+:root{
+  --ink:#111;--ink-sub:#3a3a3a;--ink-muted:#666;--ink-faint:#999;--ink-ghost:#bbb;
+  --rule:#ddd;--rule-lt:#efefef;
+  --accent:#1246F0;--accent-bg:#eef1ff;
+  --accent2:#0a6640;--accent2-bg:#e8f5ee;
+  --warn:#c95000;--danger:#b81010;
+  --bg:#edece8;--surface:#fff;--chip:#e4e4e4;
+  --doc-w:1058px;--doc-h:749px;
+  --font:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);font-family:var(--font);font-size:14px;color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* ── SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDE ── */
+.side{width:400px;min-width:360px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow:hidden}
+.side-head{padding:14px 20px 12px;border-bottom:1px solid var(--rule);flex-shrink:0;display:flex;flex-direction:column;gap:9px}
+.side-head-top{display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--accent)}
+.logo-ver{font-size:9px;font-weight:500;color:var(--ink-ghost)}
+.side-ttl{font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+
+.btn-row{display:flex;gap:5px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 11px;border-radius:5px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;border:none;white-space:nowrap;transition:background .1s,transform .08s;letter-spacing:-.01em}
+.btn:active{transform:scale(.97)}
+.btn svg{flex-shrink:0}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:#0d38d0}
+.btn-g{background:var(--chip);color:var(--ink)}.btn-g:hover{background:#d4d4d4}
+.btn-d{background:#fff0ef;color:var(--danger)}.btn-d:hover{background:#ffe0de}
+.btn-ol{background:transparent;color:var(--ink);border:1px solid var(--rule)}.btn-ol:hover{background:var(--rule-lt)}
+.btn-gr{background:var(--accent2-bg);color:var(--accent2);border:1px solid #c0ddd0}.btn-gr:hover{background:#d5ede4}
+
+/* TABS */
+.tab-bar{display:flex;border-bottom:1px solid var(--rule);flex-shrink:0}
+.tab{flex:1;padding:8px 2px;text-align:center;font-size:10px;font-weight:600;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid transparent;transition:color .1s,border-color .1s;letter-spacing:-.01em}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.rv.on{color:var(--accent2);border-bottom-color:var(--accent2)}
+
+/* FORM */
+.form-scroll{flex:1;overflow-y:auto;padding:14px 20px 40px}
+.form-scroll::-webkit-scrollbar{width:3px}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+.pane{display:none}.pane.on{display:block}
+
+.fsec{margin-bottom:16px}
+.fsec-lbl{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--rule-lt)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.dot.o{background:var(--warn)}.dot.gr{background:var(--ink-ghost)}.dot.rv{background:var(--accent2)}
+
+.preset-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.pchip{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-muted);transition:all .1s}
+.pchip:hover{border-color:var(--accent);color:var(--accent)}
+.pchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.field{margin-bottom:9px}
+.ftop{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.field label{font-size:10.5px;font-weight:600;color:var(--ink-sub);letter-spacing:-.01em}
+.cnt{font-size:9px;font-weight:500;color:var(--ink-ghost);font-variant-numeric:tabular-nums}
+.cnt.w{color:var(--warn)}.cnt.ov{color:var(--danger)}
+
+.field input,.field select,.field textarea{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;font-family:var(--font);font-size:11.5px;font-weight:400;color:var(--ink);background:var(--surface);resize:none;line-height:1.5;transition:border-color .1s,box-shadow .1s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink-ghost)}
+.frow{display:flex;gap:6px}.frow .field{flex:1}
+
+.rv-focus input:focus,.rv-focus select:focus,.rv-focus textarea:focus{border-color:var(--accent2)!important;box-shadow:0 0 0 3px var(--accent2-bg)!important}
+
+.score-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.schip{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-muted);transition:all .1s}
+.schip:hover{border-color:var(--accent2);color:var(--accent2)}
+.schip.on{color:#fff}
+.schip[data-s="매우 긍정적"].on{background:#0a6640;border-color:#0a6640}
+.schip[data-s="긍정적"].on{background:#1a8a55;border-color:#1a8a55}
+.schip[data-s="보통"].on{background:#5a6a7a;border-color:#5a6a7a}
+.schip[data-s="아쉬움"].on{background:#b06000;border-color:#b06000}
+.schip[data-s="재검토 필요"].on{background:#a01010;border-color:#a01010}
+
+.ptog-wrap{display:flex;align-items:center;justify-content:space-between;background:var(--rule-lt);border-radius:6px;padding:8px 12px;margin-bottom:10px}
+.ptog-lbl{font-size:11px;font-weight:600;color:var(--ink-sub)}
+.tog-grp{display:flex;gap:4px}
+.tog{padding:4px 10px;border-radius:4px;font-size:10.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-muted);transition:all .1s}
+.tog.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* image upload */
+.up-area{border:1.5px dashed var(--rule);border-radius:6px;padding:12px;text-align:center;cursor:pointer;position:relative;margin-bottom:7px;transition:border-color .1s,background .1s}
+.up-area:hover{border-color:var(--accent);background:var(--accent-bg)}
+.up-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-icon{font-size:20px;margin-bottom:3px}
+.up-txt{font-size:10.5px;font-weight:600;color:var(--ink-muted)}
+.up-sub{font-size:9.5px;color:var(--ink-ghost)}
+
+.img-card{border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-bottom:7px}
+.img-card img{width:100%;height:90px;object-fit:cover;display:block}
+.img-card-body{padding:6px 10px;display:flex;flex-direction:column;gap:4px}
+.img-cap{width:100%;border:1px solid var(--rule);border-radius:4px;padding:5px 8px;font-family:var(--font);font-size:11px;color:var(--ink);resize:none;line-height:1.4}
+.img-cap:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.img-acts{display:flex;gap:5px;justify-content:flex-end}
+.img-btn{position:relative;display:inline-flex;align-items:center;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:var(--ink-muted);transition:all .1s;font-family:var(--font)}
+.img-btn:hover{border-color:var(--danger);color:var(--danger)}
+.img-btn.rep:hover{border-color:var(--accent);color:var(--accent)}
+.img-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* 결과물 이미지 추가 버튼 */
+.add-img-btn{width:100%;padding:8px;border:1.5px dashed var(--accent2);border-radius:5px;background:var(--accent2-bg);color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .1s;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px}
+.add-img-btn:hover{background:#d0ead8}
+.rv-img-card{border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin-bottom:7px;position:relative}
+.rv-img-card img{width:100%;height:90px;object-fit:cover;display:block}
+.rv-img-card-body{padding:6px 10px;display:flex;flex-direction:column;gap:4px}
+.rv-img-num{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2);margin-bottom:2px}
+
+.info-box{font-size:10.5px;color:var(--ink-muted);line-height:1.75;background:var(--rule-lt);padding:9px 12px;border-radius:5px;margin-bottom:10px}
+
+/* ── 프로젝트 저장/불러오기 ── */
+.proj-save-row{display:flex;gap:6px;margin-bottom:10px}
+.proj-save-row input{flex:1;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;font-family:var(--font);font-size:11.5px;color:var(--ink)}
+.proj-save-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.proj-list{display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto}
+.proj-list::-webkit-scrollbar{width:3px}
+.proj-list::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+.proj-item{display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--rule);border-radius:5px;background:var(--surface);transition:border-color .1s}
+.proj-item:hover{border-color:var(--accent)}
+.proj-item-info{flex:1;min-width:0}
+.proj-item-name{font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-item-meta{font-size:9.5px;color:var(--ink-ghost);margin-top:1px}
+.proj-item-acts{display:flex;gap:4px;flex-shrink:0}
+.proj-btn{padding:3px 9px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:var(--ink-muted);font-family:var(--font);transition:all .1s}
+.proj-btn.load:hover{border-color:var(--accent);color:var(--accent)}
+.proj-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+.proj-empty{font-size:11px;color:var(--ink-ghost);text-align:center;padding:16px 0}
+
+/* ── PREVIEW ── */
+.pv-panel{flex:1;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.pv-bar{padding:10px 20px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0}
+.pv-bar-l{display:flex;align-items:center;gap:10px}
+.pv-bar-ttl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.scale-chip{font-size:9.5px;font-weight:600;background:var(--chip);color:var(--ink-muted);padding:2px 8px;border-radius:4px;font-variant-numeric:tabular-nums}
+.pg-dots{display:flex;gap:5px;align-items:center}
+.pg-dot{width:7px;height:7px;border-radius:50%;background:var(--rule);cursor:pointer;transition:background .1s}
+.pg-dot.on{background:var(--accent)}.pg-dot.dim{opacity:.3}
+.pg-dot.rv-dot.on{background:var(--accent2)}
+
+.pv-scroll{flex:1;overflow:auto;padding:24px 28px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.pv-scroll::-webkit-scrollbar{width:5px;height:5px}
+.pv-scroll::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
+.dw{flex-shrink:0;transform-origin:top center}
+
+/* ════════════════ DOC 1 ════════════════ */
+.doc{width:var(--doc-w);height:var(--doc-h);background:#fff;display:flex;flex-direction:column;font-family:var(--font);color:var(--ink);position:relative;overflow:hidden;box-shadow:0 3px 28px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.05)}
+.doc::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 26px 26px 0;border-color:transparent var(--accent) transparent transparent}
+
+.dh{display:flex;align-items:stretch;border-bottom:2.5px solid var(--ink);flex-shrink:0}
+.dh-main{flex:1;padding:13px 20px 10px}
+.dh-top{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.dh-badge{background:var(--ink);color:#fff;font-size:7.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px}
+.dh-ptype{font-size:9px;font-weight:600;color:var(--ink-muted);letter-spacing:.03em}
+.dh-title{font-size:20px;font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1.1;word-break:keep-all}
+.dh-title.ph{color:var(--ink-ghost);font-weight:400;font-style:italic}
+.dh-meta{width:155px;flex-shrink:0;padding:10px 16px;border-left:1px solid var(--rule);display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.dm{display:flex;flex-direction:column;gap:1px}
+.dm-k{font-size:6.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.dm-v{font-size:9.5px;font-weight:600;color:var(--ink);line-height:1.3}
+.dm-v.ph{color:var(--ink-ghost);font-style:italic;font-weight:400}
+
+.db{flex:1;display:flex;min-height:0;overflow:hidden}
+.db-left{width:248px;flex-shrink:0;border-right:1px solid var(--rule);display:flex;flex-direction:column;overflow:hidden}
+.db-right{flex:1;display:flex;min-height:0;overflow:hidden}
+.db-col{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--rule);overflow:hidden}
+.db-col:last-child{border-right:none}
+
+.ds{padding:10px 13px;border-bottom:1px solid var(--rule-lt);display:flex;flex-direction:column;gap:4px;flex:1;overflow:hidden}
+.ds:last-child{border-bottom:none}
+.ds-ttl{display:flex;align-items:center;gap:4px;flex-shrink:0;margin-bottom:1px}
+.ds-ttl .ko{font-size:8.5px;font-weight:800;color:var(--accent);letter-spacing:-.01em}
+.ds-ttl .en{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.ds-ttl .rl{flex:1;height:1px;background:var(--accent-bg)}
+.ds-ttl.dark .ko{color:var(--ink-sub)}.ds-ttl.dark .rl{background:var(--rule-lt)}
+.ds-body{font-size:9.5px;font-weight:400;line-height:1.72;color:var(--ink);word-break:keep-all;white-space:pre-wrap;flex:1;overflow:hidden}
+.ds-body.ph{color:var(--ink-ghost);font-style:italic}
+
+.df{border-top:2px solid var(--ink);display:flex;flex-shrink:0}
+.df-sec{flex:1;padding:6px 13px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:2px}
+.df-sec:last-child{border-right:none}
+.df-lbl{display:flex;align-items:center;gap:4px}
+.df-lbl .ko{font-size:8.5px;font-weight:700;color:var(--ink-sub);letter-spacing:-.01em}
+.df-lbl .en{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.df-txt{font-size:9px;font-weight:400;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:keep-all}
+.df-txt.ph{color:var(--ink-ghost);font-style:italic}
+
+/* ════════════════ DOC 2 ════════════════ */
+.doc2{width:var(--doc-w);height:var(--doc-h);background:#fff;display:flex;flex-direction:column;font-family:var(--font);color:var(--ink);position:relative;overflow:hidden;box-shadow:0 3px 28px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.05)}
+.doc2::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 26px 26px 0;border-color:transparent var(--accent) transparent transparent}
+.doc2.hide-p2{display:none}
+.p2h{height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid var(--ink);padding:0 20px}
+.p2h-sub{font-size:7.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.p2h-title{font-size:11.5px;font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+.p2h-title.ph{color:var(--ink-ghost);font-weight:400;font-style:italic}
+.p2h-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.p2h-pg{font-size:7.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-ghost)}
+.p2h-date{font-size:8px;font-weight:600;color:var(--ink-muted)}
+/* p2 img zone: 36+557+132+24=749 */
+.p2-img-zone{flex-shrink:0;height:557px;display:flex;border-bottom:1px solid var(--rule);overflow:hidden}
+.p2-img-col{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--rule);overflow:hidden}
+.p2-img-col:last-child{border-right:none}
+.p2-img-hd{height:26px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 14px;border-bottom:1px solid var(--rule-lt)}
+.p2-img-num-ko{font-size:8.5px;font-weight:800;color:var(--ink-sub)}
+.p2-img-num{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.p2-img-frame{flex-shrink:0;width:100%;height:431px;background:#f2f2f2;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.p2-img-frame img{display:block;width:100%;height:100%;object-fit:cover;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.no-img-ph{text-align:center;color:var(--ink-ghost)}
+.no-img-ph svg{margin:0 auto 5px;display:block;opacity:.2}
+.no-img-ph span{font-size:9.5px;font-weight:500}
+.p2-cap-zone{flex-shrink:0;height:100px;overflow:hidden;padding:7px 14px;border-top:1px solid var(--rule-lt)}
+.p2-cap-lbl{font-size:6.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-ghost);margin-bottom:3px}
+.p2-cap-txt{font-size:9px;font-weight:400;line-height:1.65;color:var(--ink);white-space:pre-wrap;word-break:keep-all;overflow:hidden}
+.p2-cap-txt.ph{color:var(--ink-ghost);font-style:italic}
+.p2-dir-zone{flex:1;display:flex;overflow:hidden;border-bottom:1px solid var(--rule)}
+.p2-dir-sec{flex:1;padding:8px 14px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.p2-dir-sec:last-child{border-right:none}
+.p2-dir-lbl{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.p2-dir-lbl .ko{font-size:8.5px;font-weight:800;color:var(--accent)}
+.p2-dir-lbl .en{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.p2-dir-txt{font-size:9px;font-weight:400;line-height:1.68;color:var(--ink);white-space:pre-wrap;word-break:keep-all;flex:1;overflow:hidden}
+.p2-dir-txt.ph{color:var(--ink-ghost);font-style:italic}
+.p2f{height:24px;flex-shrink:0;border-top:2px solid var(--ink);padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.p2f-txt{font-size:7px;font-weight:600;letter-spacing:.04em;color:var(--ink-ghost)}
+
+/* ════════════════ DOC 3: 리뷰 시트 ════════════════
+   레이아웃: 헤더44 + 바디flex:1 + 바54 + 풋22 = 749
+   바디 = 좌(이미지) + 우(섹션)
+   이미지 개수에 따라 좌측 width, 이미지 그리드 동적 변환
+════════════════════════════════════════════════ */
+.doc3{width:var(--doc-w);height:var(--doc-h);background:#fff;display:flex;flex-direction:column;font-family:var(--font);color:var(--ink);position:relative;overflow:hidden;box-shadow:0 3px 28px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.05)}
+.doc3::after{content:'';position:absolute;right:0;top:0;border-style:solid;border-width:0 26px 26px 0;border-color:transparent var(--accent2) transparent transparent}
+.doc3.hide-p3{display:none}
+
+.p3h{height:44px;flex-shrink:0;display:flex;align-items:stretch;border-bottom:2.5px solid var(--ink)}
+.p3h-main{flex:1;padding:0 20px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.p3h-super{display:flex;align-items:center;gap:8px}
+.p3h-badge{background:var(--accent2);color:#fff;font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;padding:2px 7px;flex-shrink:0}
+.p3h-label{font-size:7.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted)}
+.p3h-title{font-size:12.5px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1}
+.p3h-title.ph{color:var(--ink-ghost);font-weight:400;font-style:italic}
+.p3h-right{width:190px;flex-shrink:0;padding:7px 15px;border-left:1px solid var(--rule);display:flex;flex-direction:column;justify-content:space-between}
+.p3h-mr{display:flex;align-items:center;gap:5px}
+.p3h-mk{font-size:6.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost);flex-shrink:0;min-width:40px}
+.p3h-mv{font-size:8.5px;font-weight:600;color:var(--ink)}
+.p3h-mv.ph{color:var(--ink-ghost);font-style:italic;font-weight:400}
+
+/* 바디: 이미지 있을 때 좌우, 없을 때 우측만 full */
+.p3-body{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* 좌측 이미지 존 — JS가 width, display 조절 */
+.p3-img-col{
+  flex-shrink:0;border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;overflow:hidden;
+  width:0; /* 기본: 숨김, JS가 px 설정 */
+}
+.p3-img-col.has-imgs{width:auto} /* JS가 직접 width px 지정 */
+
+.p3-img-col-hd{height:22px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid var(--rule-lt)}
+.p3-img-col-ko{font-size:8px;font-weight:800;color:var(--ink-sub)}
+.p3-img-col-en{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2)}
+
+/* 이미지 그리드 스크롤 */
+.p3-img-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px}
+.p3-img-scroll::-webkit-scrollbar{width:3px}
+.p3-img-scroll::-webkit-scrollbar-thumb{background:var(--rule-lt);border-radius:2px}
+
+/* 이미지 그리드: 1장=1col, 2장=1col(세로), 3-6장=2col */
+.p3-img-grid{display:grid;gap:4px;height:100%}
+.p3-img-grid.cols-1{grid-template-columns:1fr}
+.p3-img-grid.cols-2{grid-template-columns:1fr 1fr}
+
+.p3-img-item{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--rule-lt);border-radius:2px}
+.p3-img-item-frame{flex:1;overflow:hidden;min-height:60px;background:#f4f4f2;display:flex;align-items:center;justify-content:center}
+.p3-img-item-frame img{width:100%;height:100%;object-fit:cover;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.p3-img-item-cap{flex-shrink:0;padding:3px 5px;background:#fafafa;border-top:1px solid var(--rule-lt)}
+.p3-img-item-cap-txt{font-size:7.5px;font-weight:500;color:var(--ink-muted);line-height:1.4;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.p3-img-item-cap-txt.ph{color:var(--ink-ghost);font-style:italic}
+
+/* 우측: 5섹션 */
+.p3-right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.p3-row{display:flex;flex:1;overflow:hidden}
+.p3-row+.p3-row{border-top:1px solid var(--rule-lt)}
+.p3-sec{flex:1;padding:8px 12px;border-right:1px solid var(--rule-lt);display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.p3-sec:last-child{border-right:none}
+.p3-sec-ttl{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.p3-sec-ttl .ko{font-size:8.5px;font-weight:800;color:var(--accent2);letter-spacing:-.01em}
+.p3-sec-ttl .en{font-size:6.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.p3-sec-ttl .rvr{flex:1;height:1px;background:var(--accent2-bg)}
+.p3-sec-body{font-size:9px;font-weight:400;line-height:1.72;color:var(--ink);white-space:pre-wrap;word-break:keep-all;flex:1;overflow:hidden}
+.p3-sec-body.ph{color:var(--ink-ghost);font-style:italic}
+
+/* 하단 바 */
+.p3-bar{flex-shrink:0;height:52px;border-top:1px solid var(--rule);display:flex;align-items:center;padding:0 20px;gap:14px;background:#fafafa}
+.p3-bar-lbl{font-size:7.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost);white-space:nowrap}
+.score-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 13px;border-radius:3px;font-size:10.5px;font-weight:800;background:var(--rule-lt);color:var(--ink-muted)}
+.score-badge.s0{background:#e8f5ee;color:#0a6640}
+.score-badge.s1{background:#eef7f2;color:#1a8a55}
+.score-badge.s2{background:#f0f0f0;color:#5a6a7a}
+.score-badge.s3{background:#fff3e0;color:#b06000}
+.score-badge.s4{background:#fde8e8;color:#a01010}
+.score-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.p3-bar-meta{margin-left:auto;display:flex;gap:14px}
+.p3-bar-item{display:flex;flex-direction:column;gap:1px;align-items:flex-end}
+.p3-bar-item-k{font-size:6.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-ghost)}
+.p3-bar-item-v{font-size:9px;font-weight:600;color:var(--ink)}
+.p3-bar-item-v.ph{color:var(--ink-ghost);font-style:italic}
+
+.p3f{height:22px;flex-shrink:0;border-top:2px solid var(--ink);padding:0 20px;display:flex;align-items:center;justify-content:space-between}
+.p3f-txt{font-size:7px;font-weight:600;letter-spacing:.04em;color:var(--ink-ghost)}
+
+/* ════════════════ PRINT ════════════════ */
+@media print{
+  html,body{background:#fff!important;height:auto!important}
+  .app{display:block!important;height:auto!important}
+  .side,.pv-bar,.no-print{display:none!important}
+  .pv-panel{flex:none!important;display:block!important;background:#fff!important;overflow:visible!important}
+  .pv-scroll{padding:0!important;overflow:visible!important;display:block!important;gap:0!important;align-items:unset!important}
+  .dw{transform:none!important;width:auto!important;height:auto!important;margin:0!important}
+  .doc{width:100%!important;height:100vh!important;box-shadow:none!important;page-break-after:always;break-after:page;overflow:hidden!important}
+  .doc2{width:100%!important;height:100vh!important;box-shadow:none!important;overflow:hidden!important;page-break-after:always;break-after:page}
+  .doc2.hide-p2{display:none!important}
+  .doc3{width:100%!important;height:100vh!important;box-shadow:none!important;overflow:hidden!important;page-break-after:avoid;break-after:avoid}
+  .doc3.hide-p3{display:none!important}
+  .p2-img-frame{height:431px!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .p2-img-frame img,.p3-img-item-frame img{width:100%!important;height:100%!important;object-fit:cover!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .p3-img-item-frame{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  @page{size:A4 landscape;margin:0}
+}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--ink);color:#fff;font-size:11.5px;font-weight:600;padding:9px 18px;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;z-index:9999;white-space:nowrap;font-family:var(--font)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s}
+.modal-bg.on{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:8px;padding:24px;width:460px;max-width:92vw;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal-title{font-size:14px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px}
+.modal-close{float:right;cursor:pointer;font-size:18px;color:var(--ink-ghost);line-height:1;margin-top:-2px}
+.modal-close:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════ SIDE ══════════════ -->
+<aside class="side no-print">
+  <div class="side-head">
+    <div class="side-head-top">
+      <span class="logo">One Sheet Brief</span>
+      <span class="logo-ver">v3.1</span>
+    </div>
+    <div class="side-ttl">원시트 기획서 시스템</div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="doPrint()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 6V2h8v4M4 12H3a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v3a2 2 0 01-2 2h-1m-6 0h4v4H6v-4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        인쇄/PDF
+      </button>
+      <button class="btn btn-g" onclick="saveData()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 5l-2-2H3a1 1 0 00-1 1v9a1 1 0 001 1h10a1 1 0 001-1V5zm-5 7a2 2 0 110-4 2 2 0 010 4zM4 4h6v3H4V4z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        저장
+      </button>
+      <button class="btn btn-gr" onclick="openProjModal()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 011-1h4l2 2h4a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        프로젝트
+      </button>
+      <button class="btn btn-d" onclick="resetData()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1m2 0l-.867 9.143A1 1 0 0111.138 14H4.862a1 1 0 01-.995-.857L3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        초기화
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar no-print">
+    <div class="tab on"  onclick="switchTab('t1',this)">1P · 기획</div>
+    <div class="tab"     onclick="switchTab('t2',this)">2P · 레퍼런스</div>
+    <div class="tab rv"  onclick="switchTab('t3',this)">3P · 리뷰</div>
+    <div class="tab"     onclick="switchTab('t4',this)">출력 설정</div>
+  </div>
+
+  <div class="form-scroll">
+
+    <!-- ── TAB 1: 기획 ── -->
+    <div class="pane on" id="t1">
+      <div class="fsec" style="margin-top:4px">
+        <div class="fsec-lbl"><span class="dot"></span>프로젝트 프리셋</div>
+        <div class="preset-row">
+          <button class="pchip" onclick="applyPreset('촬영 기획',this)">촬영 기획</button>
+          <button class="pchip" onclick="applyPreset('비주얼 캠페인',this)">비주얼 캠페인</button>
+          <button class="pchip" onclick="applyPreset('마케팅 콘텐츠',this)">마케팅 콘텐츠</button>
+          <button class="pchip" onclick="applyPreset('SNS 콘텐츠',this)">SNS 콘텐츠</button>
+          <button class="pchip" onclick="applyPreset('상세페이지 개선',this)">상세페이지 개선</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot"></span>기본 정보</div>
+        <div class="field"><div class="ftop"><label>기획 제목 *</label><span class="cnt" id="c_title">0/60</span></div><input type="text" id="f_title" maxlength="60" oninput="sy('title',this.value);cc('f_title','c_title',60)"/></div>
+        <div class="frow">
+          <div class="field"><label>프로젝트 유형</label><select id="f_ptype" onchange="sy('ptype',this.value)"><option value="">유형 선택</option><option>촬영 기획</option><option>비주얼 캠페인</option><option>마케팅 콘텐츠</option><option>브랜드 필름</option><option>SNS 콘텐츠</option><option>제품 사진</option><option>바이럴 영상</option><option>이벤트 기획</option><option>상세페이지 개선</option><option>기타</option></select></div>
+          <div class="field"><label>작성자</label><input type="text" id="f_author" oninput="sy('author',this.value)"/></div>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot"></span>배경 &amp; 목표</div>
+        <div class="field"><div class="ftop"><label>배경 / 문제</label><span class="cnt" id="c_bg">0/160</span></div><textarea id="f_bg" rows="3" maxlength="160" oninput="sy('bg',this.value);cc('f_bg','c_bg',160)"></textarea></div>
+        <div class="field"><div class="ftop"><label>목표</label><span class="cnt" id="c_goal">0/120</span></div><textarea id="f_goal" rows="2" maxlength="120" oninput="sy('goal',this.value);cc('f_goal','c_goal',120)"></textarea></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot o"></span>핵심 제안 &amp; 방향</div>
+        <div class="field"><div class="ftop"><label>핵심 제안</label><span class="cnt" id="c_proposal">0/180</span></div><textarea id="f_proposal" rows="3" maxlength="180" oninput="sy('proposal',this.value);cc('f_proposal','c_proposal',180)"></textarea></div>
+        <div class="field"><div class="ftop"><label>비주얼 / 촬영 방향</label><span class="cnt" id="c_visual">0/150</span></div><textarea id="f_visual" rows="2" maxlength="150" oninput="sy('visual',this.value);cc('f_visual','c_visual',150)"></textarea></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot o"></span>실행 &amp; 기대효과</div>
+        <div class="field"><div class="ftop"><label>실행안</label><span class="cnt" id="c_action">0/200</span></div><textarea id="f_action" rows="4" maxlength="200" oninput="sy('action',this.value);cc('f_action','c_action',200)"></textarea></div>
+        <div class="field"><div class="ftop"><label>기대효과</label><span class="cnt" id="c_effect">0/140</span></div><textarea id="f_effect" rows="2" maxlength="140" oninput="sy('effect',this.value);cc('f_effect','c_effect',140)"></textarea></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot gr"></span>일정 · 협업 · 리스크</div>
+        <div class="field"><div class="ftop"><label>일정 / 우선순위</label><span class="cnt" id="c_schedule">0/110</span></div><textarea id="f_schedule" rows="2" maxlength="110" oninput="sy('schedule',this.value);cc('f_schedule','c_schedule',110)"></textarea></div>
+        <div class="field"><div class="ftop"><label>협업 필요사항</label><span class="cnt" id="c_collab">0/110</span></div><textarea id="f_collab" rows="2" maxlength="110" oninput="sy('collab',this.value);cc('f_collab','c_collab',110)"></textarea></div>
+        <div class="field"><div class="ftop"><label>리스크 / 메모</label><span class="cnt" id="c_risk">0/110</span></div><textarea id="f_risk" rows="2" maxlength="110" oninput="sy('risk',this.value);cc('f_risk','c_risk',110)"></textarea></div>
+      </div>
+    </div>
+
+    <!-- ── TAB 2: 레퍼런스 ── -->
+    <div class="pane" id="t2">
+      <div class="fsec" style="margin-top:4px">
+        <div class="fsec-lbl"><span class="dot"></span>레퍼런스 이미지 1</div>
+        <div class="up-area" id="up1"><input type="file" accept="image/*" onchange="handleImg(1,this)"/><div class="up-icon">🖼</div><div class="up-txt">이미지 업로드</div><div class="up-sub">PNG · JPG · WEBP</div></div>
+        <div class="img-card" id="card1" style="display:none"><img id="thumb1" src="" alt="ref1"/><div class="img-card-body"><div class="ftop"><label style="font-size:10px;font-weight:600;color:var(--ink-sub)">캡션/적용방향</label><span class="cnt" id="c_cap1">0/120</span></div><textarea class="img-cap" id="f_cap1" rows="2" maxlength="120" placeholder="선택 이유, 적용 방향" oninput="sy('cap1',this.value);cc('f_cap1','c_cap1',120)"></textarea><div class="img-acts"><label class="img-btn rep">🔄 교체<input type="file" accept="image/*" onchange="handleImg(1,this)"/></label><button class="img-btn" onclick="removeImg(1)">🗑 삭제</button></div></div></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot"></span>레퍼런스 이미지 2</div>
+        <div class="up-area" id="up2"><input type="file" accept="image/*" onchange="handleImg(2,this)"/><div class="up-icon">🖼</div><div class="up-txt">이미지 업로드</div><div class="up-sub">PNG · JPG · WEBP</div></div>
+        <div class="img-card" id="card2" style="display:none"><img id="thumb2" src="" alt="ref2"/><div class="img-card-body"><div class="ftop"><label style="font-size:10px;font-weight:600;color:var(--ink-sub)">캡션/적용방향</label><span class="cnt" id="c_cap2">0/120</span></div><textarea class="img-cap" id="f_cap2" rows="2" maxlength="120" placeholder="선택 이유, 적용 방향" oninput="sy('cap2',this.value);cc('f_cap2','c_cap2',120)"></textarea><div class="img-acts"><label class="img-btn rep">🔄 교체<input type="file" accept="image/*" onchange="handleImg(2,this)"/></label><button class="img-btn" onclick="removeImg(2)">🗑 삭제</button></div></div></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot o"></span>추가 디렉션</div>
+        <div class="field"><div class="ftop"><label>무드 / 톤앤매너</label><span class="cnt" id="c_mood">0/200</span></div><textarea id="f_mood" rows="3" maxlength="200" placeholder="색감, 감성, 연출 톤 등" oninput="sy('mood',this.value);cc('f_mood','c_mood',200)"></textarea></div>
+        <div class="field"><div class="ftop"><label>금지 / 주의 요소</label><span class="cnt" id="c_avoid">0/150</span></div><textarea id="f_avoid" rows="2" maxlength="150" placeholder="피해야 할 연출, 금칙어" oninput="sy('avoid',this.value);cc('f_avoid','c_avoid',150)"></textarea></div>
+        <div class="field"><div class="ftop"><label>추가 메모</label><span class="cnt" id="c_note2">0/200</span></div><textarea id="f_note2" rows="3" maxlength="200" placeholder="2페이지 추가 맥락" oninput="sy('note2',this.value);cc('f_note2','c_note2',200)"></textarea></div>
+      </div>
+    </div>
+
+    <!-- ── TAB 3: 리뷰 ── -->
+    <div class="pane rv-focus" id="t3">
+      <div class="fsec" style="margin-top:4px">
+        <div class="fsec-lbl"><span class="dot rv"></span>리뷰 기본 정보</div>
+        <div class="frow">
+          <div class="field"><label>리뷰어</label><input type="text" id="f_reviewer" placeholder="촬영팀 / 마케팅 / 본인" oninput="sy('reviewer',this.value)"/></div>
+          <div class="field"><label>리뷰 일자</label><input type="text" id="f_reviewDate" oninput="sy('reviewDate',this.value)"/></div>
+        </div>
+        <div class="field">
+          <label>성과 체감도</label>
+          <div class="score-row">
+            <button class="schip" data-s="매우 긍정적" onclick="setScore('매우 긍정적',this)">매우 긍정적</button>
+            <button class="schip" data-s="긍정적" onclick="setScore('긍정적',this)">긍정적</button>
+            <button class="schip" data-s="보통" onclick="setScore('보통',this)">보통</button>
+            <button class="schip" data-s="아쉬움" onclick="setScore('아쉬움',this)">아쉬움</button>
+            <button class="schip" data-s="재검토 필요" onclick="setScore('재검토 필요',this)">재검토 필요</button>
+          </div>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot rv"></span>결과 리뷰</div>
+        <div class="field"><div class="ftop"><label>실행 결과 요약</label><span class="cnt" id="c_reviewSummary">0/160</span></div><textarea id="f_reviewSummary" rows="3" maxlength="160" placeholder="어떤 결과물이 나왔는지 간략히 정리" oninput="sy('reviewSummary',this.value);cc('f_reviewSummary','c_reviewSummary',160)"></textarea></div>
+        <div class="field"><div class="ftop"><label>잘된 점</label><span class="cnt" id="c_reviewGood">0/140</span></div><textarea id="f_reviewGood" rows="2" maxlength="140" placeholder="이번 실행에서 유효했던 점" oninput="sy('reviewGood',this.value);cc('f_reviewGood','c_reviewGood',140)"></textarea></div>
+        <div class="field"><div class="ftop"><label>아쉬운 점</label><span class="cnt" id="c_reviewBad">0/140</span></div><textarea id="f_reviewBad" rows="2" maxlength="140" placeholder="부족했던 점, 예상과 달랐던 부분" oninput="sy('reviewBad',this.value);cc('f_reviewBad','c_reviewBad',140)"></textarea></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot rv"></span>인사이트 &amp; 다음 액션</div>
+        <div class="field"><div class="ftop"><label>핵심 인사이트</label><span class="cnt" id="c_reviewInsight">0/180</span></div><textarea id="f_reviewInsight" rows="3" maxlength="180" placeholder="다음 기획에 반영할 핵심 학습" oninput="sy('reviewInsight',this.value);cc('f_reviewInsight','c_reviewInsight',180)"></textarea></div>
+        <div class="field"><div class="ftop"><label>다음 액션 / 확장 제안</label><span class="cnt" id="c_reviewNext">0/140</span></div><textarea id="f_reviewNext" rows="2" maxlength="140" placeholder="후속 실험, A/B 방향, 다음 단계" oninput="sy('reviewNext',this.value);cc('f_reviewNext','c_reviewNext',140)"></textarea></div>
+      </div>
+
+      <!-- ★ 결과물 이미지 다중 업로드 -->
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot rv"></span>결과물 이미지 <span style="margin-left:4px;font-size:8.5px;color:var(--ink-ghost);text-transform:none;letter-spacing:0;font-weight:500">최대 6장</span></div>
+        <div id="rv-img-list"></div>
+        <button class="add-img-btn" id="addRvImgBtn" onclick="addRvImgSlot()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          결과물 이미지 추가
+        </button>
+      </div>
+    </div>
+
+    <!-- ── TAB 4: 출력 설정 ── -->
+    <div class="pane" id="t4">
+      <div class="fsec" style="margin-top:4px">
+        <div class="fsec-lbl"><span class="dot"></span>인쇄 범위</div>
+        <div class="ptog-wrap">
+          <span class="ptog-lbl">출력 페이지 수</span>
+          <div class="tog-grp">
+            <button class="tog" id="tog1" onclick="setPrintMode(1)">1페이지</button>
+            <button class="tog" id="tog2" onclick="setPrintMode(2)">2페이지</button>
+            <button class="tog on" id="tog3" onclick="setPrintMode(3)">3페이지</button>
+          </div>
+        </div>
+        <div class="info-box"><b>1페이지</b>: 기획서 본문만<br><b>2페이지</b>: 기획서 + 레퍼런스<br><b>3페이지</b>: 기획서 + 레퍼런스 + 리뷰 시트 <b>(기본값)</b></div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot o"></span>샘플 데이터</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn btn-ol" style="width:100%;justify-content:flex-start;gap:7px" onclick="loadSample('촬영 기획')"><span>📸</span>촬영 기획 샘플</button>
+          <button class="btn btn-ol" style="width:100%;justify-content:flex-start;gap:7px" onclick="loadSample('비주얼 캠페인')"><span>🎨</span>비주얼 캠페인 샘플</button>
+          <button class="btn btn-ol" style="width:100%;justify-content:flex-start;gap:7px" onclick="loadSample('마케팅 콘텐츠')"><span>📣</span>마케팅 콘텐츠 샘플</button>
+          <button class="btn btn-ol" style="width:100%;justify-content:flex-start;gap:7px" onclick="loadSample('SNS 콘텐츠')"><span>📱</span>SNS 콘텐츠 샘플</button>
+          <button class="btn btn-ol" style="width:100%;justify-content:flex-start;gap:7px" onclick="loadSample('상세페이지 개선')"><span>🛒</span>상세페이지 개선 샘플</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="fsec-lbl"><span class="dot gr"></span>인쇄 가이드</div>
+        <div class="info-box">• 용지: <b>A4 가로 (Landscape)</b><br>• 여백: <b>없음</b> 권장<br>• 배경 그래픽: <b>허용</b> 체크<br>• Mac Chrome: <b>⌘P → PDF로 저장</b></div>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ══════════════ PREVIEW ══════════════ -->
+<div class="pv-panel">
+  <div class="pv-bar no-print">
+    <div class="pv-bar-l">
+      <span class="pv-bar-ttl">A4 Landscape Preview</span>
+      <span class="scale-chip" id="scaleBadge">100%</span>
+    </div>
+    <div class="pg-dots">
+      <div class="pg-dot on" title="1P 기획서" onclick="jumpTo(1)"></div>
+      <div class="pg-dot on" id="dot2" title="2P 레퍼런스" onclick="jumpTo(2)"></div>
+      <div class="pg-dot rv-dot on" id="dot3" title="3P 리뷰" onclick="jumpTo(3)"></div>
+    </div>
+  </div>
+  <div class="pv-scroll" id="pvScroll">
+
+    <!-- DOC 1 -->
+    <div class="dw" id="dw1">
+      <div class="doc" id="doc1">
+        <div class="dh">
+          <div class="dh-main">
+            <div class="dh-top"><span class="dh-badge">One Sheet Brief</span><span class="dh-ptype" id="d_ptype">— 유형 미선택</span></div>
+            <div class="dh-title ph" id="d_title">기획 제목을 입력하세요</div>
+          </div>
+          <div class="dh-meta">
+            <div class="dm"><span class="dm-k">작성일 Date</span><span class="dm-v" id="d_date">—</span></div>
+            <div class="dm"><span class="dm-k">작성자 Author</span><span class="dm-v ph" id="d_author">이름 / 팀</span></div>
+            <div class="dm"><span class="dm-k">상태 Status</span><span class="dm-v">Draft</span></div>
+            <div class="dm"><span class="dm-k">페이지 Page</span><span class="dm-v" id="d_pgcount">1 / 3</span></div>
+          </div>
+        </div>
+        <div class="db">
+          <div class="db-left">
+            <div class="ds" style="flex:1.3"><div class="ds-ttl"><span class="ko">배경 · 문제</span><span class="en">Background</span><span class="rl"></span></div><div class="ds-body ph" id="d_bg">배경과 문제를 입력하세요.</div></div>
+            <div class="ds" style="background:#fafafa"><div class="ds-ttl dark"><span class="ko">목표</span><span class="en">Objective</span><span class="rl"></span></div><div class="ds-body ph" id="d_goal">목표를 입력하세요.</div></div>
+          </div>
+          <div class="db-right">
+            <div class="db-col">
+              <div class="ds" style="flex:1"><div class="ds-ttl"><span class="ko">핵심 제안</span><span class="en">Key Proposal</span><span class="rl"></span></div><div class="ds-body ph" id="d_proposal">핵심 제안을 입력하세요.</div></div>
+              <div class="ds" style="flex:1"><div class="ds-ttl"><span class="ko">비주얼 방향</span><span class="en">Visual Direction</span><span class="rl"></span></div><div class="ds-body ph" id="d_visual">비주얼 방향을 입력하세요.</div></div>
+            </div>
+            <div class="db-col" style="border-right:none">
+              <div class="ds" style="flex:1"><div class="ds-ttl"><span class="ko">실행안</span><span class="en">Action Plan</span><span class="rl"></span></div><div class="ds-body ph" id="d_action">실행안을 입력하세요.</div></div>
+              <div class="ds" style="flex:1"><div class="ds-ttl"><span class="ko">기대효과</span><span class="en">Expected Outcome</span><span class="rl"></span></div><div class="ds-body ph" id="d_effect">기대효과를 입력하세요.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="df">
+          <div class="df-sec"><div class="df-lbl"><span class="ko">일정 · 우선순위</span><span class="en">Schedule</span></div><div class="df-txt ph" id="d_schedule">일정을 입력하세요.</div></div>
+          <div class="df-sec"><div class="df-lbl"><span class="ko">협업 필요사항</span><span class="en">Collaboration</span></div><div class="df-txt ph" id="d_collab">협업 사항을 입력하세요.</div></div>
+          <div class="df-sec"><div class="df-lbl"><span class="ko">리스크 · 메모</span><span class="en">Risk / Notes</span></div><div class="df-txt ph" id="d_risk">리스크를 입력하세요.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOC 2 -->
+    <div class="dw" id="dw2">
+      <div class="doc2" id="doc2">
+        <div class="p2h">
+          <div><div class="p2h-sub">레퍼런스 · 비주얼 디렉션 시트 / Reference &amp; Visual Direction Sheet</div><div class="p2h-title ph" id="p2_title">기획 제목</div></div>
+          <div class="p2h-right"><span class="p2h-pg" id="p2_pgnum">Page 2 of 3</span><span class="p2h-date" id="p2_date">—</span></div>
+        </div>
+        <div class="p2-img-zone">
+          <div class="p2-img-col"><div class="p2-img-hd"><span class="p2-img-num-ko">레퍼런스 01</span><span class="p2-img-num">/ Reference Image 01</span></div><div class="p2-img-frame" id="frame1"><div class="no-img-ph"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="8.5" r="1.5" fill="#ccc"/></svg><span>이미지 업로드</span></div></div><div class="p2-cap-zone"><div class="p2-cap-lbl">캡션 · 적용 방향 / Caption</div><div class="p2-cap-txt ph" id="p2_cap1">캡션을 입력하세요.</div></div></div>
+          <div class="p2-img-col"><div class="p2-img-hd"><span class="p2-img-num-ko">레퍼런스 02</span><span class="p2-img-num">/ Reference Image 02</span></div><div class="p2-img-frame" id="frame2"><div class="no-img-ph"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="8.5" r="1.5" fill="#ccc"/></svg><span>이미지 업로드</span></div></div><div class="p2-cap-zone"><div class="p2-cap-lbl">캡션 · 적용 방향 / Caption</div><div class="p2-cap-txt ph" id="p2_cap2">캡션을 입력하세요.</div></div></div>
+        </div>
+        <div class="p2-dir-zone">
+          <div class="p2-dir-sec"><div class="p2-dir-lbl"><span class="ko">무드 · 톤앤매너</span><span class="en">Mood / T&amp;M</span></div><div class="p2-dir-txt ph" id="p2_mood">무드를 입력하세요.</div></div>
+          <div class="p2-dir-sec"><div class="p2-dir-lbl"><span class="ko">금지 · 주의</span><span class="en">Avoid</span></div><div class="p2-dir-txt ph" id="p2_avoid">금지 사항을 입력하세요.</div></div>
+          <div class="p2-dir-sec"><div class="p2-dir-lbl"><span class="ko">추가 메모</span><span class="en">Notes</span></div><div class="p2-dir-txt ph" id="p2_note2">추가 메모를 입력하세요.</div></div>
+        </div>
+        <div class="p2f"><span class="p2f-txt" id="p2f_author">—</span><span class="p2f-txt">레퍼런스 시트 · 내부 참고용 / Internal Use Only</span></div>
+      </div>
+    </div>
+
+    <!-- DOC 3 -->
+    <div class="dw" id="dw3">
+      <div class="doc3" id="doc3">
+        <div class="p3h">
+          <div class="p3h-main">
+            <div class="p3h-super"><span class="p3h-badge">Result Review</span><span class="p3h-label">결과물 리뷰 · 회고 시트 / Post-Project Review Sheet</span></div>
+            <div class="p3h-title ph" id="p3_title">기획 제목</div>
+          </div>
+          <div class="p3h-right">
+            <div class="p3h-mr"><span class="p3h-mk">Page</span><span class="p3h-mv" id="p3_pgnum">3 of 3</span></div>
+            <div class="p3h-mr"><span class="p3h-mk">리뷰어</span><span class="p3h-mv ph" id="p3_reviewer">—</span></div>
+            <div class="p3h-mr"><span class="p3h-mk">일자</span><span class="p3h-mv ph" id="p3_reviewDate">—</span></div>
+          </div>
+        </div>
+        <div class="p3-body">
+          <!-- 이미지 컬럼: JS가 동적으로 렌더링 -->
+          <div class="p3-img-col" id="p3ImgCol">
+            <div class="p3-img-col-hd"><span class="p3-img-col-ko">결과물</span><span class="p3-img-col-en">/ Result Output</span></div>
+            <div class="p3-img-scroll"><div class="p3-img-grid cols-1" id="p3ImgGrid"></div></div>
+          </div>
+          <!-- 섹션 -->
+          <div class="p3-right">
+            <div class="p3-row" style="flex:1.1"><div class="p3-sec" style="border-right:none"><div class="p3-sec-ttl"><span class="ko">실행 결과 요약</span><span class="en">Result Summary</span><span class="rvr"></span></div><div class="p3-sec-body ph" id="p3_reviewSummary">실행 결과를 입력하세요.</div></div></div>
+            <div class="p3-row" style="flex:1">
+              <div class="p3-sec"><div class="p3-sec-ttl"><span class="ko">잘된 점</span><span class="en">What Worked</span><span class="rvr"></span></div><div class="p3-sec-body ph" id="p3_reviewGood">잘된 점을 입력하세요.</div></div>
+              <div class="p3-sec"><div class="p3-sec-ttl"><span class="ko">아쉬운 점</span><span class="en">What Didn't</span><span class="rvr"></span></div><div class="p3-sec-body ph" id="p3_reviewBad">아쉬운 점을 입력하세요.</div></div>
+            </div>
+            <div class="p3-row" style="flex:1">
+              <div class="p3-sec"><div class="p3-sec-ttl"><span class="ko">핵심 인사이트</span><span class="en">Key Insight</span><span class="rvr"></span></div><div class="p3-sec-body ph" id="p3_reviewInsight">인사이트를 입력하세요.</div></div>
+              <div class="p3-sec"><div class="p3-sec-ttl"><span class="ko">다음 액션</span><span class="en">Next Action</span><span class="rvr"></span></div><div class="p3-sec-body ph" id="p3_reviewNext">다음 액션을 입력하세요.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="p3-bar">
+          <span class="p3-bar-lbl">성과 체감도 / Result Score</span>
+          <div id="p3_scoreBadge" class="score-badge"><span class="score-dot"></span><span id="p3_scoreText">미입력</span></div>
+          <div class="p3-bar-meta">
+            <div class="p3-bar-item"><span class="p3-bar-item-k">유형 Type</span><span class="p3-bar-item-v ph" id="p3_ptype">—</span></div>
+            <div class="p3-bar-item"><span class="p3-bar-item-k">작성자 Author</span><span class="p3-bar-item-v ph" id="p3_author">—</span></div>
+          </div>
+        </div>
+        <div class="p3f"><span class="p3f-txt" id="p3f_reviewer">리뷰어: —</span><span class="p3f-txt">결과 리뷰 시트 · 내부 아카이브 / Result Review · Internal Archive</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /app -->
+
+<!-- ══════════════ 프로젝트 모달 ══════════════ -->
+<div class="modal-bg" id="projModal" onclick="closeProjModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">프로젝트 저장 / 불러오기 <span class="modal-close" onclick="closeProjModal()">×</span></div>
+
+    <div class="fsec">
+      <div class="fsec-lbl"><span class="dot"></span>현재 작업 저장</div>
+      <div class="proj-save-row">
+        <input type="text" id="projNameInput" placeholder="프로젝트 이름 입력 (예: FW 캠페인 기획)" maxlength="60"/>
+        <button class="btn btn-p" onclick="saveProject()" style="flex-shrink:0">저장</button>
+      </div>
+    </div>
+
+    <div class="fsec">
+      <div class="fsec-lbl"><span class="dot gr"></span>저장된 프로젝트</div>
+      <div class="proj-list" id="projList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+const SKEY = 'osb_v31';      // 현재 작업 자동저장
+const PLIST_KEY = 'osb_projects'; // 프로젝트 목록
+
+let PM = 3;
+
+let S = {
+  title:'', ptype:'', author:'',
+  bg:'', goal:'', proposal:'', visual:'',
+  action:'', effect:'',
+  schedule:'', collab:'', risk:'',
+  cap1:'', cap2:'',
+  mood:'', avoid:'', note2:'',
+  img1:'', img2:'',
+  reviewSummary:'', reviewGood:'', reviewBad:'',
+  reviewInsight:'', reviewNext:'',
+  reviewScore:'', reviewer:'', reviewDate:'',
+  // ★ 결과물 이미지 다중: [{src, cap}, ...]
+  reviewImgs: []
+};
+
+/* ══════════════════════════════════════════
+   PRESET DATA
+══════════════════════════════════════════ */
+const PS = {
+  '촬영 기획':{title:'FW 컬렉션 화보 촬영 기획',ptype:'촬영 기획',bg:'현재 브랜드 비주얼 자산이 2시즌 이상 갱신되지 않아 온라인 쇼핑몰·SNS 콘텐츠 퀄리티가 저하되고 있음. 신규 시즌 론칭 전 핵심 화보 촬영이 필요한 시점.',goal:'• 시즌 메인 화보 30컷 이상 확보\n• 쇼핑몰 대표 이미지 전면 교체\n• SNS 피드 2주치 콘텐츠 선확보',proposal:'"도시형 자연주의" 컨셉 — 스튜디오와 야외 로케이션 병행. 라이프스타일 감성 연출로 구매 욕구 자연스럽게 유도.',visual:'레퍼런스: Totême, A.P.C. 시즌 룩북\n색감: 뉴트럴 베이지 + 차콜 / 자연광+소프트박스\n로케이션: 스튜디오 2일 + 서울숲 야외 1일 (매직아워)',action:'① D-14: 스타일링 컨펌 및 소품 확정\n② D-10: 모델·스태프 최종 확정\n③ D-7: 사전 리허설 및 세트 셋업\n④ D-0: 스튜디오 촬영 (10시~19시)\n⑤ D+1: 야외 촬영 (06시~14시)\n⑥ D+10: 1차 보정본 납품',effect:'• 쇼핑몰 CVR 전월 대비 +18% 예상\n• SNS 인게이지먼트 2배 목표\n• 브랜드 아카이브 자산 30컷+ 확보',schedule:'촬영: D-day 확정 후 3주 내\n보정: 촬영 후 10영업일\n우선: 스튜디오 > 야외 > 디테일',collab:'• 외부 스타일리스트 1인\n• 헤어메이크업: 인하우스+보조 1\n• 모델: 에이전시 섭외 진행 중',risk:'• 날씨 리스크 → 우천 대체일 2일 확보\n• 모델 스케줄 변동 가능성\n• 보정 리드타임 10일 이상 필수',reviewSummary:'스튜디오 2일, 야외 1일 촬영 완료. 보정 완료본 총 38컷 납품. 쇼핑몰 전 상품 이미지 교체 완료.',reviewGood:'• 매직아워 야외컷 반응 기대 이상 (저장률 19%)\n• 스타일리스트와 호흡이 좋아 촬영 속도 빠름\n• 뉴트럴 색감이 브랜드 무드와 잘 맞아 떨어짐',reviewBad:'• 스튜디오 2일차 오후 조명 세팅 시간 과다\n• 일부 소품 밀도 낮아 재촬영 발생\n• 보정 리드타임 예상보다 2일 초과',reviewInsight:'매직아워 촬영은 다음 시즌에도 필수. 소품 리스트 체크리스트화 필요. 조명 셋업 버퍼 30분 추가.',reviewNext:'• 야외 로케이션 2일로 확장\n• 소품 담당 전담 배치\n• 비하인드 영상 병행 촬영 검토',reviewScore:'긍정적'},
+  '비주얼 캠페인':{title:'2025 FW 브랜드 비주얼 캠페인',ptype:'비주얼 캠페인',bg:'브랜드 인지도 조사에서 20-30대 타겟층의 40%가 "접근하기 어렵다"고 인식. 전략적 이미지 리포지셔닝 필요.',goal:'• FW 시즌 브랜드 무드 선점\n• SNS 300만 도달, 저장률 15%+\n• 쇼핑몰 신규 유입 전월 대비 +25%',proposal:'"일상 속 럭셔리" 콘셉트 — 스튜디오와 도심 로케이션을 믹스해 실용성과 감성을 동시에 전달.',visual:'레퍼런스: Zara FW 2023, COS 캠페인\n색감: 딥 오트밀 + 버건디 / 자연광 위주\n촬영: 스튜디오 2일 + 성수 야외 1일 (골든아워)',action:'① 9/4 크리에이티브 킥오프\n② 9/11 무드보드 & 스타일링 확정\n③ 9/18–19 스튜디오 촬영\n④ 9/24 야외 촬영\n⑤ 10/5 1차 보정 납품\n⑥ 10/10 SNS 업로드',effect:'• 브랜드 NPS 5p 개선 기대\n• SNS 참여율 3.2% → 5% 목표\n• 재고 소진율 +15%',schedule:'Kick-off: 9/4 → 촬영: 9/18~24\n납품: 10/5 → 업로드: 10/10~',collab:'• 스타일리스트 2인 (외부)\n• 헤어메이크업: 인하우스\n• 모델: 에이전시 협의 중',risk:'• 야외 우천 리스크 → 대체일 확보\n• 보정 리드타임 최소 10일',reviewSummary:'캠페인 총 24컷 + 영상 3편 납품. 릴스 조회수 280만, 저장률 17% 달성. 쇼핑몰 신규 유입 +22% 기록.',reviewGood:'• 릴스 저장률 목표치(15%) 초과\n• 성수 골든아워 야외컷이 대표 비주얼로 부상\n• "일상 속 럭셔리" 메시지 반응 뚜렷',reviewBad:'• 쇼핑몰 유입 목표(+25%) 소폭 미달\n• 영상 1편 CTR 낮아 조기 노출 중단\n• 인플루언서 계약 지연으로 1주 게시 밀림',reviewInsight:'릴스 저장 유도형 카피가 전환에 더 효과적. 인플루언서 계약은 D-21 이전 완료 필수.',reviewNext:'• 인플루언서 선정 기준 개정\n• 야외 로케이션 비중 확대\n• 배너 A/B 테스트 진행',reviewScore:'긍정적'},
+  '마케팅 콘텐츠':{title:'신제품 런칭 마케팅 콘텐츠 기획',ptype:'마케팅 콘텐츠',bg:'신제품 출시 D-30. 콘텐츠 파이프라인 공백 상태. 런칭 전 인지도 확보 및 구매 전환을 위한 통합 전략 필요.',goal:'• 런칭 전 2주 바이럴 기반 마련\n• 타겟층 인지도 30%+ 달성\n• 24시간 내 판매 목표치 달성',proposal:'티징 → 언박싱 → 후기 3단계 콘텐츠 흐름 설계.',visual:'티징: 블랙&화이트 미니멀 / 언박싱: 브랜드 컬러\n포맷: 9:16 위주 + 1:1 피드용',action:'① D-21: 기획안 확정\n② D-14: 촬영 및 1차 편집\n③ D-7: 티징 시작\n④ D-3: 인플루언서 발송\n⑤ D-day: 일괄 게시\n⑥ D+7: 성과 리포트',effect:'• 첫 주 조회수 50만+\n• 전환율 업계 대비 1.5배\n• 검색량 +40%',schedule:'기획: D-21 / 제작: D-14~D-7\n배포: D-7~ / 리포트: D+7',collab:'• 외부 크리에이터 2-3팀\n• 퍼포먼스팀 협업\n• CS팀 당일 대기',risk:'• 제품 수급 딜레이\n• 인플루언서 계약 지연\n• 알고리즘 변동',reviewSummary:'런칭 24시간 내 판매 목표 108% 달성. 티징 조회수 62만, 언박싱 공유 3,400건. 검색량 +52%.',reviewGood:'• 티징 기대감 형성 성공\n• 크리에이터 3팀 동시 업로드 성사\n• 검색량 목표 대폭 초과',reviewBad:'• CS 문의 예상의 2배\n• 인플루언서 품질 편차\n• 티징 게시 하루 늦어짐',reviewInsight:'상세페이지 FAQ 강화 필요. 크리에이터 브리핑 구체화 필요.',reviewNext:'• 크리에이터 브리핑 고도화\n• FAQ 섹션 신설\n• CS 교육 매뉴얼 제작',reviewScore:'매우 긍정적'},
+  'SNS 콘텐츠':{title:'브랜드 SNS 콘텐츠 월간 기획',ptype:'SNS 콘텐츠',bg:'팔로워 성장 정체 (월 +0.5%). 알고리즘 친화적 포맷 부재, 콘텐츠 일관성 부족.',goal:'• 월 팔로워 +3%\n• 저장률 평균 8%+\n• 인게이지먼트율 1.2% → 4%',proposal:'릴스 중심 주 3회 정기 발행 전략.',visual:'피드 톤: 브랜드 팔레트 2색\n릴스: 15초 이내, 자막+사운드\n스토리: 인터랙티브 스티커',action:'① 월초: 캘린더 확정\n② 1주: 릴스+피드 제작\n③ 2주: 스토리+인터랙션\n④ 3주: 중간 점검\n⑤ 4주: 티징+월간 리포트',effect:'• 팔로워 순증 월 500+\n• 릴스 도달 1만+\n• 저장 기반 노출 확대',schedule:'매월 1일: 캘린더 / 주 3회 발행\n리포트: 매월 말일',collab:'• 디자인팀: 그래픽 템플릿\n• 마케팅팀: 광고 소재\n• CS팀: 댓글 관리',risk:'• 트렌드 급변 폐기 가능성\n• 알고리즘 변경',reviewSummary:'4주간 릴스 8편, 피드 8편 완료. 팔로워 +2.8%, 저장률 9.1%, 인게이지먼트 2.7%.',reviewGood:'• 저장률 목표 초과\n• 주 3회 리듬 유지\n• 스토리 CTR 12%',reviewBad:'• 팔로워 성장 소폭 미달\n• 릴스 2편 조회수 저조\n• 3주차 1편 지연',reviewInsight:'인포그래픽형 콘텐츠가 저장 지표에 효과적. 릴스 음악 트렌드 주간 업데이트 필요.',reviewNext:'• 음악 선정 프로세스 정비\n• 팔로워 목적 콘텐츠 +1편\n• 콜라보 팔로워 유입 실험',reviewScore:'보통'},
+  '상세페이지 개선':{title:'주력 상품 상세페이지 전면 리뉴얼',ptype:'상세페이지 개선',bg:'현재 CVR 1.2%로 카테고리 평균(3.2%) 대비 낮음. 첫 화면 이탈률 68%.',goal:'• CVR 1.2% → 2.5%+\n• 이탈률 30%p 감소\n• 체류시간 40초 → 90초',proposal:'모바일 퍼스트 — 3초 내 혜택 전달 → 시각화 → CTA 재설계.',visual:'히어로: 제품+라이프스타일\n포인트: 인포그래픽 혜택\n소재: 1:1 + 9:16 모바일',action:'① 1주: 히트맵+벤치마킹\n② 2주: 와이어프레임+카피\n③ 3주: 디자인+촬영\n④ 4주: 개발+QA\n⑤ 5주: A/B 런칭',effect:'• 월 매출 +800만원 예상\n• ROAS +40%\n• 문의량 30% 감소',schedule:'기획~디자인: 3주 / 개발: 1주\nA/B: 2주+ / 최종: 6주',collab:'• 개발팀: 랜딩+A/B\n• 데이터팀: CVR 분석\n• CS팀: 문의 유형 공유',risk:'• 개발 리소스 부족\n• A/B 기간 매출 변동\n• SEO 영향 모니터링',reviewSummary:'A/B 3주 완료. CVR 2.3% 달성 (+92%). 체류시간 88초. 문의 28% 감소.',reviewGood:'• CVR 목표 근접\n• 체류시간 거의 달성\n• CS 업무 부담 경감',reviewBad:'• CVR 0.2%p 미달\n• 리뷰 섹션 로딩 이슈\n• 모바일 레이아웃 일부 깨짐',reviewInsight:'리뷰 섹션 로딩 최적화가 핵심. 인포그래픽 혜택 시각화 → 다른 상품 확장 권장.',reviewNext:'• 리뷰 섹션 지연 로딩\n• 2·3위 상품에 순차 적용\n• 히어로 이미지 A/B 추가',reviewScore:'긍정적'}
+};
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+function init(){
+  const saved = localStorage.getItem(SKEY);
+  if(saved){
+    try{
+      const p = JSON.parse(saved);
+      S = {...S, ...p};
+      if(!Array.isArray(S.reviewImgs)) S.reviewImgs = [];
+    }catch(e){}
+  } else {
+    const d = PS['비주얼 캠페인'];
+    Object.keys(d).forEach(k=>{ if(k in S) S[k]=d[k]; });
+  }
+  const spm = localStorage.getItem(SKEY+'_pm');
+  PM = spm ? parseInt(spm) : 3;
+
+  applyPrintMode(PM, false);
+  populateForm();
+  renderAll();
+  setDate();
+  restoreImgSlots();   // ref imgs
+  renderRvImgList();   // review imgs from state
+  rescale();
+  window.addEventListener('resize', debounce(rescale, 100));
+}
+
+function setDate(){
+  const d = new Date();
+  const s = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
+  const de=document.getElementById('d_date'); if(de) de.textContent=s;
+  const pe=document.getElementById('p2_date'); if(pe) pe.textContent=s;
+  if(!S.reviewDate){
+    S.reviewDate = s;
+    const rd=document.getElementById('f_reviewDate'); if(rd) rd.value=s;
+  }
+}
+const p2=n=>String(n).padStart(2,'0');
+
+/* ══════════════════════════════════════════
+   FORM MAP
+══════════════════════════════════════════ */
+const FM={title:'f_title',ptype:'f_ptype',author:'f_author',bg:'f_bg',goal:'f_goal',proposal:'f_proposal',visual:'f_visual',action:'f_action',effect:'f_effect',schedule:'f_schedule',collab:'f_collab',risk:'f_risk',cap1:'f_cap1',cap2:'f_cap2',mood:'f_mood',avoid:'f_avoid',note2:'f_note2',reviewSummary:'f_reviewSummary',reviewGood:'f_reviewGood',reviewBad:'f_reviewBad',reviewInsight:'f_reviewInsight',reviewNext:'f_reviewNext',reviewer:'f_reviewer',reviewDate:'f_reviewDate'};
+const CM={title:['f_title','c_title',60],bg:['f_bg','c_bg',160],goal:['f_goal','c_goal',120],proposal:['f_proposal','c_proposal',180],visual:['f_visual','c_visual',150],action:['f_action','c_action',200],effect:['f_effect','c_effect',140],schedule:['f_schedule','c_schedule',110],collab:['f_collab','c_collab',110],risk:['f_risk','c_risk',110],cap1:['f_cap1','c_cap1',120],cap2:['f_cap2','c_cap2',120],mood:['f_mood','c_mood',200],avoid:['f_avoid','c_avoid',150],note2:['f_note2','c_note2',200],reviewSummary:['f_reviewSummary','c_reviewSummary',160],reviewGood:['f_reviewGood','c_reviewGood',140],reviewBad:['f_reviewBad','c_reviewBad',140],reviewInsight:['f_reviewInsight','c_reviewInsight',180],reviewNext:['f_reviewNext','c_reviewNext',140]};
+
+function populateForm(){
+  for(const[k,id]of Object.entries(FM)){const el=document.getElementById(id);if(el)el.value=S[k]||'';}
+  for(const[k,[fi,ci,mx]]of Object.entries(CM)) cc(fi,ci,mx);
+  document.querySelectorAll('.pchip').forEach(b=>b.classList.toggle('on',b.textContent.trim()===S.ptype));
+  const sel=document.getElementById('f_ptype');if(sel&&S.ptype)sel.value=S.ptype;
+  document.querySelectorAll('.schip').forEach(b=>b.classList.toggle('on',b.dataset.s===S.reviewScore));
+}
+
+/* ══════════════════════════════════════════
+   SYNC & RENDER
+══════════════════════════════════════════ */
+function sy(key,val){S[key]=val;renderAll();}
+function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setEl(id,val,fb){const el=document.getElementById(id);if(!el)return;const empty=!val||!val.trim();el.textContent=empty?fb:val;el.classList.toggle('ph',empty);}
+
+const SC_CLS={'매우 긍정적':'s0','긍정적':'s1','보통':'s2','아쉬움':'s3','재검토 필요':'s4'};
+
+function renderAll(){
+  setEl('d_title',S.title,'기획 제목을 입력하세요');
+  setTxt('d_ptype',S.ptype?`— ${S.ptype}`:'— 유형 미선택');
+  setEl('d_author',S.author,'이름 / 팀');
+  setTxt('d_pgcount',PM===3?'1 / 3':PM===2?'1 / 2':'1 / 1');
+  setEl('d_bg',S.bg,'배경과 문제를 입력하세요.');
+  setEl('d_goal',S.goal,'목표를 입력하세요.');
+  setEl('d_proposal',S.proposal,'핵심 제안을 입력하세요.');
+  setEl('d_visual',S.visual,'비주얼 방향을 입력하세요.');
+  setEl('d_action',S.action,'실행안을 입력하세요.');
+  setEl('d_effect',S.effect,'기대효과를 입력하세요.');
+  setEl('d_schedule',S.schedule,'일정을 입력하세요.');
+  setEl('d_collab',S.collab,'협업 사항을 입력하세요.');
+  setEl('d_risk',S.risk,'리스크를 입력하세요.');
+
+  setEl('p2_title',S.title,'기획 제목');
+  const p2pg=document.getElementById('p2_pgnum');if(p2pg)p2pg.textContent=PM===3?'Page 2 of 3':'Page 2 of 2';
+  const p2a=document.getElementById('p2f_author');if(p2a)p2a.textContent=S.author?.trim()?`작성자: ${S.author}`:'—';
+  setEl('p2_cap1',S.cap1,'캡션을 입력하세요.');
+  setEl('p2_cap2',S.cap2,'캡션을 입력하세요.');
+  setEl('p2_mood',S.mood,'무드를 입력하세요.');
+  setEl('p2_avoid',S.avoid,'금지 사항을 입력하세요.');
+  setEl('p2_note2',S.note2,'추가 메모를 입력하세요.');
+
+  // P3
+  setEl('p3_title',S.title,'기획 제목');
+  setEl('p3_reviewer',S.reviewer,'—');
+  setEl('p3_reviewDate',S.reviewDate,'—');
+  setEl('p3_reviewSummary',S.reviewSummary,'실행 결과를 입력하세요.');
+  setEl('p3_reviewGood',S.reviewGood,'잘된 점을 입력하세요.');
+  setEl('p3_reviewBad',S.reviewBad,'아쉬운 점을 입력하세요.');
+  setEl('p3_reviewInsight',S.reviewInsight,'인사이트를 입력하세요.');
+  setEl('p3_reviewNext',S.reviewNext,'다음 액션을 입력하세요.');
+  setEl('p3_ptype',S.ptype,'—');
+  setEl('p3_author',S.author,'—');
+  setTxt('p3_pgnum',PM===3?'3 of 3':'—');
+
+  const badge=document.getElementById('p3_scoreBadge'),scoreText=document.getElementById('p3_scoreText');
+  if(badge&&scoreText){badge.className='score-badge'+(S.reviewScore&&SC_CLS[S.reviewScore]?' '+SC_CLS[S.reviewScore]:'');scoreText.textContent=S.reviewScore||'미입력';}
+  const p3fr=document.getElementById('p3f_reviewer');if(p3fr)p3fr.textContent=S.reviewer?.trim()?`리뷰어: ${S.reviewer}`:'리뷰어: —';
+
+  // doc3 이미지 컬럼 업데이트
+  renderP3ImgCol();
+  rescale();
+}
+
+/* ══════════════════════════════════════════
+   CHAR COUNT
+══════════════════════════════════════════ */
+function cc(fi,ci,max){const el=document.getElementById(fi),cnt=document.getElementById(ci);if(!el||!cnt)return;const n=el.value.length;cnt.textContent=`${n}/${max}`;cnt.className='cnt'+(n>=max?' ov':n>=max*.85?' w':'');}
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+function switchTab(id,el){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(id).classList.add('on');el.classList.add('on');
+}
+
+/* ══════════════════════════════════════════
+   PRESET
+══════════════════════════════════════════ */
+function applyPreset(name,btn){
+  document.querySelectorAll('.pchip').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  S.ptype=name;const sel=document.getElementById('f_ptype');if(sel)sel.value=name;
+  renderAll();showToast(`"${name}" 프리셋 적용`);
+}
+function loadSample(name){
+  const d=PS[name];if(!d)return;
+  if(!confirm(`"${name}" 샘플을 불러올까요? 현재 내용이 덮어써집니다.`))return;
+  Object.keys(d).forEach(k=>{if(k in S)S[k]=d[k];});
+  S.reviewImgs=[];
+  populateForm();renderRvImgList();renderAll();
+  showToast(`"${name}" 샘플 로드 완료`);
+}
+
+/* ══════════════════════════════════════════
+   SCORE
+══════════════════════════════════════════ */
+function setScore(val,btn){
+  document.querySelectorAll('.schip').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  sy('reviewScore',val);
+}
+
+/* ══════════════════════════════════════════
+   PRINT MODE
+══════════════════════════════════════════ */
+function setPrintMode(mode){PM=mode;localStorage.setItem(SKEY+'_pm',mode);applyPrintMode(mode,true);renderAll();}
+function applyPrintMode(mode,doRescale){
+  PM=mode;
+  ['tog1','tog2','tog3'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.classList.toggle('on',i+1===mode);});
+  const show2=mode>=2,show3=mode>=3;
+  const doc2=document.getElementById('doc2'),dw2=document.getElementById('dw2'),dot2=document.getElementById('dot2');
+  const doc3=document.getElementById('doc3'),dw3=document.getElementById('dw3'),dot3=document.getElementById('dot3');
+  if(doc2)doc2.classList.toggle('hide-p2',!show2);if(dw2)dw2.style.display=show2?'':'none';
+  if(dot2){dot2.classList.toggle('on',show2);dot2.classList.toggle('dim',!show2);}
+  if(doc3)doc3.classList.toggle('hide-p3',!show3);if(dw3)dw3.style.display=show3?'':'none';
+  if(dot3){dot3.classList.toggle('on',show3);dot3.classList.toggle('dim',!show3);}
+  if(doRescale)setTimeout(rescale,30);
+}
+
+/* ══════════════════════════════════════════
+   REF IMAGES (기존 1,2)
+══════════════════════════════════════════ */
+const NO_IMG_HTML=`<div class="no-img-ph"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/><circle cx="8.5" cy="8.5" r="1.5" fill="#ccc"/></svg><span>이미지 업로드</span></div>`;
+
+function handleImg(n,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{const src=e.target.result;S['img'+n]=src;renderImg(n,src);try{localStorage.setItem(SKEY+'_img'+n,src);}catch(er){showToast('이미지 저장이 제한될 수 있습니다');}};
+  reader.readAsDataURL(file);input.value='';
+}
+function renderImg(n,src){
+  const up=document.getElementById('up'+n),card=document.getElementById('card'+n),thumb=document.getElementById('thumb'+n),frame=document.getElementById('frame'+n);
+  if(src){if(up)up.style.display='none';if(card)card.style.display='block';if(thumb)thumb.src=src;if(frame)frame.innerHTML=`<img src="${src}" alt="ref${n}"/>`;}
+  else{if(up)up.style.display='';if(card)card.style.display='none';if(frame)frame.innerHTML=NO_IMG_HTML;}
+}
+function removeImg(n){S['img'+n]='';renderImg(n,'');try{localStorage.removeItem(SKEY+'_img'+n);}catch(e){}}
+function restoreImgSlots(){[1,2].forEach(n=>{const src=S['img'+n]||localStorage.getItem(SKEY+'_img'+n)||'';if(src){S['img'+n]=src;renderImg(n,src);}});}
+
+/* ══════════════════════════════════════════
+   ★ REVIEW IMAGES — 다중, 최대 6장
+══════════════════════════════════════════ */
+const MAX_RV_IMGS = 6;
+
+// 사이드바 슬롯 렌더
+function renderRvImgList(){
+  const list = document.getElementById('rv-img-list');
+  const btn  = document.getElementById('addRvImgBtn');
+  if(!list||!btn) return;
+
+  list.innerHTML = '';
+  S.reviewImgs.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'rv-img-card';
+    card.innerHTML = `
+      <img src="${item.src}" alt="result${idx+1}" style="width:100%;height:90px;object-fit:cover;display:block"/>
+      <div class="rv-img-card-body">
+        <div class="rv-img-num">결과물 ${idx+1}</div>
+        <textarea class="img-cap" rows="1" maxlength="80" placeholder="캡션 (선택)" style="font-size:10.5px"
+          oninput="updateRvCap(${idx},this.value)">${item.cap||''}</textarea>
+        <div class="img-acts">
+          <label class="img-btn rep">🔄 교체<input type="file" accept="image/*" onchange="replaceRvImg(${idx},this)"/></label>
+          <button class="img-btn" onclick="removeRvImg(${idx})">🗑 삭제</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  // 최대 6장 초과 시 추가 버튼 숨김
+  btn.style.display = S.reviewImgs.length >= MAX_RV_IMGS ? 'none' : 'flex';
+}
+
+// 슬롯 추가 (파일 다이얼로그 트리거)
+function addRvImgSlot(){
+  if(S.reviewImgs.length >= MAX_RV_IMGS){ showToast('최대 6장까지 추가 가능합니다'); return; }
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.reviewImgs.push({src: ev.target.result, cap:''});
+      renderRvImgList();
+      renderP3ImgCol();
+      autoSave();
+      rescale();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function replaceRvImg(idx, input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    S.reviewImgs[idx].src = e.target.result;
+    renderRvImgList();
+    renderP3ImgCol();
+    autoSave();
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function removeRvImg(idx){
+  S.reviewImgs.splice(idx,1);
+  renderRvImgList();
+  renderP3ImgCol();
+  autoSave();
+  rescale();
+}
+
+function updateRvCap(idx, val){
+  if(S.reviewImgs[idx]) S.reviewImgs[idx].cap = val;
+  renderP3ImgCol();
+  autoSave();
+}
+
+/* ══════════════════════════════════════════
+   ★ DOC3 이미지 컬럼 동적 렌더
+   이미지 0장: 컬럼 숨김 (우측 섹션 full width)
+   이미지 1장: 컬럼 넓게 (350px), 단일 크게
+   이미지 2장: 컬럼 280px, 1열 세로
+   이미지 3-6장: 컬럼 340px, 2열 그리드
+══════════════════════════════════════════ */
+function renderP3ImgCol(){
+  const col   = document.getElementById('p3ImgCol');
+  const grid  = document.getElementById('p3ImgGrid');
+  if(!col||!grid) return;
+
+  const imgs = S.reviewImgs;
+  const n = imgs.length;
+
+  if(n === 0){
+    col.style.width = '0';
+    col.style.borderRight = 'none';
+    col.style.display = 'none';
+    return;
+  }
+
+  col.style.display = 'flex';
+  col.style.borderRight = '1px solid var(--rule)';
+
+  if(n === 1){
+    col.style.width = '360px';
+    grid.className = 'p3-img-grid cols-1';
+  } else if(n === 2){
+    col.style.width = '280px';
+    grid.className = 'p3-img-grid cols-1';
+  } else {
+    col.style.width = '360px';
+    grid.className = 'p3-img-grid cols-2';
+  }
+
+  grid.innerHTML = imgs.map((item, i) => `
+    <div class="p3-img-item">
+      <div class="p3-img-item-frame">
+        <img src="${item.src}" alt="result${i+1}"/>
+      </div>
+      <div class="p3-img-item-cap">
+        <div class="p3-img-item-cap-txt${item.cap?'':' ph'}">${item.cap||`결과물 ${i+1}`}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════════════════════════════
+   ★ SAVE / RESET
+══════════════════════════════════════════ */
+function autoSave(){
+  const t={...S};
+  // reviewImgs src를 별도로 분리 저장
+  const imgs = t.reviewImgs.map(item=>({src:'', cap:item.cap}));
+  t.reviewImgs = imgs;
+  delete t.img1; delete t.img2;
+  localStorage.setItem(SKEY, JSON.stringify(t));
+  // 이미지 개별 저장
+  if(S.img1)try{localStorage.setItem(SKEY+'_img1',S.img1);}catch(e){}
+  if(S.img2)try{localStorage.setItem(SKEY+'_img2',S.img2);}catch(e){}
+  S.reviewImgs.forEach((item,i)=>{if(item.src)try{localStorage.setItem(SKEY+'_rvimg'+i,item.src);}catch(e){}});
+}
+
+function saveData(){
+  autoSave();
+  showToast('저장되었습니다 ✓');
+}
+
+function resetData(){
+  if(!confirm('모든 내용과 이미지를 초기화할까요?'))return;
+  // 이전 rvimg 키 삭제
+  for(let i=0;i<MAX_RV_IMGS;i++) try{localStorage.removeItem(SKEY+'_rvimg'+i);}catch(e){}
+  localStorage.removeItem(SKEY);
+  localStorage.removeItem(SKEY+'_img1');
+  localStorage.removeItem(SKEY+'_img2');
+  localStorage.removeItem(SKEY+'_pm');
+  S={title:'',ptype:'',author:'',bg:'',goal:'',proposal:'',visual:'',action:'',effect:'',schedule:'',collab:'',risk:'',cap1:'',cap2:'',mood:'',avoid:'',note2:'',img1:'',img2:'',reviewSummary:'',reviewGood:'',reviewBad:'',reviewInsight:'',reviewNext:'',reviewScore:'',reviewer:'',reviewDate:'',reviewImgs:[]};
+  PM=3;
+  document.querySelectorAll('.pchip').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.schip').forEach(b=>b.classList.remove('on'));
+  populateForm(); renderImg(1,''); renderImg(2,''); renderRvImgList(); renderP3ImgCol();
+  applyPrintMode(3,false); renderAll();
+  showToast('초기화되었습니다');
+}
+
+/* ══════════════════════════════════════════
+   ★ RESTORE review images from separate keys
+══════════════════════════════════════════ */
+function restoreRvImgs(){
+  // reviewImgs의 src를 별도 키에서 복원
+  if(!Array.isArray(S.reviewImgs)) S.reviewImgs=[];
+  S.reviewImgs.forEach((item,i)=>{
+    const src = localStorage.getItem(SKEY+'_rvimg'+i)||'';
+    if(src) item.src=src;
+  });
+  // src 없는 항목 제거
+  S.reviewImgs = S.reviewImgs.filter(item=>item.src);
+}
+
+/* ══════════════════════════════════════════
+   ★ PROJECT SAVE / LOAD
+══════════════════════════════════════════ */
+function getProjList(){
+  try{ return JSON.parse(localStorage.getItem(PLIST_KEY)||'[]'); }catch(e){ return []; }
+}
+function setProjList(arr){ localStorage.setItem(PLIST_KEY, JSON.stringify(arr)); }
+
+function openProjModal(){
+  const modal = document.getElementById('projModal');
+  const nameInput = document.getElementById('projNameInput');
+  // 이름 기본값: 기획 제목
+  if(!nameInput.value && S.title) nameInput.value = S.title;
+  renderProjList();
+  modal.classList.add('on');
+}
+function closeProjModal(e){
+  if(e && e.target !== document.getElementById('projModal')) return;
+  document.getElementById('projModal').classList.remove('on');
+}
+
+function saveProject(){
+  const nameInput = document.getElementById('projNameInput');
+  const name = nameInput.value.trim();
+  if(!name){ showToast('프로젝트 이름을 입력해주세요'); return; }
+
+  // 현재 상태 스냅샷 (이미지 제외 — 별도 저장)
+  const snapshot = JSON.stringify({...S, img1:'', img2:'', reviewImgs: S.reviewImgs.map(item=>({src:'',cap:item.cap}))});
+
+  const list = getProjList();
+  const existIdx = list.findIndex(p=>p.name===name);
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  const projId = existIdx>=0 ? list[existIdx].id : 'proj_'+Date.now();
+
+  if(existIdx>=0){
+    if(!confirm(`"${name}" 프로젝트를 덮어쓸까요?`)) return;
+    list[existIdx] = {id:projId, name, date:dateStr, ptype:S.ptype};
+  } else {
+    list.unshift({id:projId, name, date:dateStr, ptype:S.ptype});
+  }
+  setProjList(list);
+
+  // 스냅샷 저장
+  localStorage.setItem('osb_proj_'+projId, snapshot);
+  // 이미지 별도 저장
+  if(S.img1)  try{localStorage.setItem('osb_proj_'+projId+'_img1',  S.img1);}catch(e){}
+  if(S.img2)  try{localStorage.setItem('osb_proj_'+projId+'_img2',  S.img2);}catch(e){}
+  S.reviewImgs.forEach((item,i)=>{ if(item.src) try{localStorage.setItem('osb_proj_'+projId+'_rv'+i, item.src);}catch(e){} });
+
+  renderProjList();
+  showToast(`"${name}" 저장 완료`);
+}
+
+function loadProject(id, name){
+  if(!confirm(`"${name}" 프로젝트를 불러올까요? 현재 작업이 자동 저장됩니다.`)) return;
+  // 현재 작업 먼저 자동 저장
+  autoSave();
+
+  const raw = localStorage.getItem('osb_proj_'+id);
+  if(!raw){ showToast('저장 데이터를 찾을 수 없습니다'); return; }
+
+  try{
+    const data = JSON.parse(raw);
+    S = {...S, ...data};
+    if(!Array.isArray(S.reviewImgs)) S.reviewImgs=[];
+
+    // 이미지 복원
+    const img1 = localStorage.getItem('osb_proj_'+id+'_img1')||''; S.img1=img1;
+    const img2 = localStorage.getItem('osb_proj_'+id+'_img2')||''; S.img2=img2;
+    S.reviewImgs.forEach((item,i)=>{
+      const src = localStorage.getItem('osb_proj_'+id+'_rv'+i)||'';
+      if(src) item.src=src;
+    });
+    S.reviewImgs = S.reviewImgs.filter(item=>item.src);
+  }catch(e){ showToast('불러오기 실패'); return; }
+
+  populateForm();
+  renderImg(1, S.img1); renderImg(2, S.img2);
+  renderRvImgList(); renderP3ImgCol();
+  renderAll();
+  document.getElementById('projModal').classList.remove('on');
+  showToast(`"${name}" 불러오기 완료`);
+}
+
+function deleteProject(id, name){
+  if(!confirm(`"${name}" 프로젝트를 삭제할까요?`)) return;
+  const list = getProjList().filter(p=>p.id!==id);
+  setProjList(list);
+  localStorage.removeItem('osb_proj_'+id);
+  // 이미지 키도 삭제
+  for(let i=0;i<MAX_RV_IMGS+2;i++){
+    localStorage.removeItem('osb_proj_'+id+'_img1');
+    localStorage.removeItem('osb_proj_'+id+'_img2');
+    localStorage.removeItem('osb_proj_'+id+'_rv'+i);
+  }
+  renderProjList();
+  showToast(`"${name}" 삭제됨`);
+}
+
+function renderProjList(){
+  const list = getProjList();
+  const container = document.getElementById('projList');
+  if(!container) return;
+  if(list.length===0){
+    container.innerHTML='<div class="proj-empty">저장된 프로젝트가 없습니다</div>';
+    return;
+  }
+  container.innerHTML = list.map(p=>`
+    <div class="proj-item">
+      <div class="proj-item-info">
+        <div class="proj-item-name">${p.name}</div>
+        <div class="proj-item-meta">${p.ptype||'—'} · ${p.date}</div>
+      </div>
+      <div class="proj-item-acts">
+        <button class="proj-btn load" onclick="loadProject('${p.id}','${p.name.replace(/'/g,"\\'")}')">불러오기</button>
+        <button class="proj-btn del" onclick="deleteProject('${p.id}','${p.name.replace(/'/g,"\\'")}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function doPrint(){ window.print(); }
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200);}
+
+/* ══════════════════════════════════════════
+   SCALE
+══════════════════════════════════════════ */
+function rescale(){
+  const scroll=document.getElementById('pvScroll');if(!scroll)return;
+  const avail=scroll.clientWidth-56;const W=1058;const sc=Math.min(1,avail/W);
+  scaleOne('dw1','doc1',sc);
+  if(PM>=2)scaleOne('dw2','doc2',sc);else{const e=document.getElementById('dw2');if(e)e.style.cssText='display:none';}
+  if(PM>=3)scaleOne('dw3','doc3',sc);else{const e=document.getElementById('dw3');if(e)e.style.cssText='display:none';}
+  const badge=document.getElementById('scaleBadge');if(badge)badge.textContent=Math.round(sc*100)+'%';
+}
+function scaleOne(wid,did,sc){
+  const w=document.getElementById(wid),d=document.getElementById(did);if(!w||!d)return;
+  const W=1058,H=d.offsetHeight||749,sH=Math.round(H*sc);
+  w.style.cssText=`transform:scale(${sc});transform-origin:top center;width:${W}px;height:${H}px;margin-bottom:${sH-H}px;flex-shrink:0;`;
+}
+function jumpTo(n){const scroll=document.getElementById('pvScroll'),el=document.getElementById('dw'+n);if(!scroll||!el)return;scroll.scrollTo({top:el.offsetTop-20,behavior:'smooth'});}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+
+/* ══ START ══ */
+init();
+restoreRvImgs();
+renderRvImgList();
+renderP3ImgCol();
+</script>
+</body>
+</html>
