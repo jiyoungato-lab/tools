@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>촬영 기획서 체크 템플릿</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #D94040;
+    --red-light: #FDF0F0;
+    --red-dark: #B02D2D;
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --border: #E5E3DD;
+    --border-strong: #C8C5BC;
+    --text: #1A1A1A;
+    --text-muted: #6F6E68;
+    --text-light: #A8A69E;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --success: #16A34A;
+    --success-bg: #F0FDF4;
+    --warning: #D97706;
+    --warning-bg: #FFFBEB;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--red);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+  .logo-title { font-size: 14px; font-weight: 700; line-height: 1.2; }
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 1px;
+  }
+  .header-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+  .autosave-indicator {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .autosave-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .autosave-dot.saving { background: var(--warning); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) { background: var(--bg); border-color: var(--text-light); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--red); color: white; border-color: var(--red); }
+  .btn-primary:hover:not(:disabled) { background: var(--red-dark); border-color: var(--red-dark); }
+  .btn-danger-outline { color: var(--red); border-color: var(--red-light); }
+  .btn-danger-outline:hover { background: var(--red-light); }
+  .btn-export-tt { background: #F0F7FF; color: #2563EB; border-color: #BFDBFE; }
+  .btn-export-tt:hover { background: #DBEAFE; border-color: #93C5FD; }
+  .btn svg { width: 13px; height: 13px; }
+
+  /* ===== Tab Bar ===== */
+  .tab-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--red); border-bottom-color: var(--red); }
+  .tab-count {
+    background: var(--bg);
+    padding: 1px 7px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+  }
+  .tab.active .tab-count { background: var(--red-light); color: var(--red); }
+
+  /* ===== Main ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== Project Tab ===== */
+  .project-tab {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .project-tab.hidden { display: none; }
+  .project-inner { max-width: 900px; margin: 0 auto; }
+
+  .project-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 720px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  .field-input, .field-textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .field-input:focus, .field-textarea:focus {
+    outline: none;
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-light);
+  }
+  .field-textarea { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+  /* PDF Import */
+  .pdf-import-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+  .pdf-import-zone:hover, .pdf-import-zone.drag-over {
+    border-color: var(--red);
+    background: var(--red-light);
+  }
+  .pdf-import-icon {
+    width: 42px; height: 42px;
+    background: var(--red-light);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    color: var(--red);
+  }
+  .pdf-import-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .pdf-import-sub { font-size: 12px; color: var(--text-muted); }
+
+  .progress-wrap {
+    display: none;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+  }
+  .progress-wrap.show { display: block; }
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.2s;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 720px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .metric-card.accent { background: var(--red); border-color: var(--red); }
+  .metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+  .metric-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .metric-card.accent .metric-label { color: rgba(255,255,255,0.75); }
+  .metric-card.accent .metric-value { color: white; }
+
+  /* ===== Cut View (split) ===== */
+  .cut-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .cut-view.hidden { display: none; }
+
+  /* Thumbnail strip */
+  .thumb-strip {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: 72px;
+    scrollbar-width: thin;
+  }
+  .thumb-strip::-webkit-scrollbar { height: 6px; }
+  .thumb-strip::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+  .thumb-item {
+    flex-shrink: 0;
+    width: 70px;
+    height: 52px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg);
+    transition: all 0.15s;
+    overflow: hidden;
+  }
+  .thumb-item:hover { border-color: var(--text-light); }
+  .thumb-item.active {
+    border-color: var(--red);
+    box-shadow: 0 0 0 2px var(--red-light);
+  }
+  .thumb-item.status-confirmed::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--success);
+  }
+  .thumb-item.status-revise::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--warning);
+  }
+  .thumb-num {
+    position: absolute;
+    bottom: 2px;
+    left: 3px;
+    right: 3px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 3px;
+    border-radius: 3px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .thumb-item.no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-item.no-image .thumb-placeholder {
+    color: var(--text-light);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .thumb-add {
+    flex-shrink: 0;
+    width: 44px;
+    height: 52px;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    background: transparent;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .thumb-add:hover { border-color: var(--red); color: var(--red); }
+
+  /* Split layout */
+  .split-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  @media (max-width: 900px) {
+    .split-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  }
+
+  /* Left: Image panel */
+  .image-panel {
+    background: #F0EFEA;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  @media (max-width: 900px) {
+    .image-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 45vh; }
+  }
+  .image-container {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .image-display {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    background: white;
+    cursor: zoom-in;
+  }
+  .image-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+  }
+  .image-empty-icon {
+    width: 56px; height: 56px;
+    background: var(--surface);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    color: var(--text-light);
+  }
+  .image-empty-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+  .image-empty-sub { font-size: 12px; }
+  .image-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+  }
+  .image-action-btn {
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text);
+  }
+  .image-action-btn:hover { background: white; }
+  .image-action-btn svg { width: 12px; height: 12px; }
+
+  /* Right: Form panel */
+  .form-panel {
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .form-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .cut-header-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cut-num-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg);
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .cut-position {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Status bar (prominent) */
+  .status-bar-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .status-big-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--surface);
+    text-align: center;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .status-big-btn:hover { background: var(--bg); }
+  .status-big-btn.active-pending {
+    background: var(--bg);
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+  .status-big-btn.active-confirmed {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .status-big-btn.active-revise {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+    color: var(--warning);
+  }
+  .status-big-btn svg { width: 14px; height: 14px; }
+
+  .form-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .form-section:last-of-type { border-bottom: none; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .form-row:last-child { margin-bottom: 0; }
+
+  /* Pills */
+  .pill-group { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pill {
+    padding: 5px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+    font-size: 12px;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .pill:hover { border-color: var(--text-light); }
+  .pill.active { background: var(--red); color: white; border-color: var(--red); }
+
+  /* Colors */
+  .color-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .color-preset {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .color-preset:hover { transform: scale(1.1); }
+  .color-preset.selected { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--red); }
+  .color-custom-wrap { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+  .color-custom-wrap input[type=color] {
+    width: 26px; height: 26px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 2px;
+    background: var(--surface);
+  }
+
+  /* Tags */
+  .tags-input {
+    padding: 7px 9px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    min-height: 38px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    cursor: text;
+  }
+  .tags-input:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-light); }
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 3px 2px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+  .tag-chip .rm {
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 0 5px;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .tag-chip .rm:hover { color: var(--red); }
+  .tags-input input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 100px;
+    font-size: 13px;
+    font-family: inherit;
+    background: transparent;
+    padding: 3px 2px;
+  }
+
+  /* Navigation bar (bottom) */
+  .nav-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 10px;
+  }
+  .nav-left, .nav-right { display: flex; gap: 6px; align-items: center; }
+  .nav-center {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .nav-center input {
+    width: 40px;
+    padding: 4px 6px;
+    text-align: center;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-left: 4px;
+  }
+
+  /* Auto-advance toggle */
+  .auto-advance {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+  }
+  .auto-advance input { cursor: pointer; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: zoom-out;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-overlay img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.3); }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .empty-state-icon {
+    width: 64px; height: 64px;
+    background: var(--surface);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: var(--text-light);
+  }
+  .empty-state-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .empty-state-sub { font-size: 13px; margin-bottom: 16px; line-height: 1.6; }
+
+  .storage-warning {
+    background: var(--warning-bg);
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #92400E;
+    margin-top: 10px;
+    display: none;
+  }
+  .storage-warning.show { display: block; }
+
+  /* Shortcuts help */
+  .shortcuts-help {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    /* Reset layout constraints */
+    html, body {
+      overflow: visible !important;
+      height: auto !important;
+      background: white !important;
+      display: block !important;
+    }
+    .main {
+      overflow: visible !important;
+      display: block !important;
+      flex: none !important;
+    }
+
+    /* Hide interactive UI */
+    .header-actions,
+    .tab-bar,
+    .thumb-strip,
+    .nav-bar,
+    .modal-overlay,
+    .pdf-import-zone,
+    .progress-wrap,
+    .image-actions,
+    .autosave-indicator,
+    .cut-view,
+    .print-hide {
+      display: none !important;
+    }
+
+    /* Show project tab always */
+    .project-tab {
+      display: block !important;
+      overflow: visible !important;
+      padding: 0 !important;
+      flex: none !important;
+    }
+    .project-tab.hidden { display: block !important; }
+
+    .project-inner { max-width: none !important; }
+
+    /* Header styling for print */
+    .header {
+      position: static !important;
+      padding: 0 0 12px 0 !important;
+      margin-bottom: 16px !important;
+      border-bottom: 2px solid #000 !important;
+      display: flex !important;
+      justify-content: flex-start !important;
+    }
+    .header-left { gap: 10px !important; }
+    .logo-mark { display: none !important; }
+
+    /* Shrink margins on sections */
+    .project-section {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      border: 1px solid #999 !important;
+      margin-bottom: 12px !important;
+      padding: 14px !important;
+      box-shadow: none !important;
+    }
+    .metrics-grid {
+      margin-bottom: 12px !important;
+      gap: 6px !important;
+    }
+    .metric-card {
+      border: 1px solid #999 !important;
+      padding: 8px 10px !important;
+      box-shadow: none !important;
+    }
+    .metric-card.accent {
+      background: #f5f5f5 !important;
+      border: 2px solid #000 !important;
+      color: black !important;
+    }
+    .metric-card.accent .metric-label,
+    .metric-card.accent .metric-value { color: black !important; }
+    .metric-value { font-size: 18px !important; }
+
+    /* Form inputs render as plain text in print */
+    .field-input, .field-textarea {
+      border: none !important;
+      border-bottom: 1px solid #999 !important;
+      border-radius: 0 !important;
+      padding: 3px 0 !important;
+      background: transparent !important;
+      color: #000 !important;
+      box-shadow: none !important;
+    }
+    .field-textarea {
+      min-height: auto !important;
+      border: 1px solid #ccc !important;
+      padding: 6px !important;
+    }
+
+    /* Print-only cut list */
+    .print-all-cuts {
+      display: block !important;
+      margin-top: 20px !important;
+      page-break-before: auto !important;
+    }
+    .print-section-title {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #000;
+      margin: 20px 0 12px 0 !important;
+    }
+    .print-cut {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      border: 1px solid #666;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 14px;
+      background: white !important;
+    }
+    .print-cut.status-confirmed {
+      border-left: 4px solid #16A34A;
+    }
+    .print-cut.status-revise {
+      border-left: 4px solid #D97706;
+    }
+    .print-cut-img {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .print-cut-img-empty {
+      width: 100%;
+      height: 140px;
+      background: #f5f5f5;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 11px;
+    }
+    .print-cut-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .print-cut-badges {
+      display: inline-flex;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .print-badge {
+      padding: 2px 7px;
+      border-radius: 100px;
+      border: 1px solid #666;
+      background: #f5f5f5;
+    }
+    .print-badge.confirmed { background: #f0fdf4; border-color: #16A34A; color: #16A34A; }
+    .print-badge.revise { background: #fffbeb; border-color: #D97706; color: #D97706; }
+    .print-cut-rows {
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .print-cut-row {
+      display: grid;
+      grid-template-columns: 55px 1fr;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .print-cut-row-key {
+      color: #666;
+      font-weight: 500;
+    }
+    .print-cut-row-val {
+      color: #000;
+    }
+    .print-cut-comment {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #ddd;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    /* Page breaks every few cuts for better printing */
+    @page { margin: 15mm; }
+  }
+
+  /* Hide print elements in screen view */
+  .print-all-cuts { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">E</div>
+    <div>
+      <div class="logo-title">촬영 기획서 체크 템플릿</div>
+      <div class="logo-sub">EGNIS · Photo & Video</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="autosave-indicator">
+      <span class="autosave-dot" id="autosave-dot"></span>
+      <span id="autosave-text">자동저장됨</span>
+    </div>
+    <button class="btn" onclick="exportJSON()" title="JSON 내보내기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      내보내기
+    </button>
+    <button class="btn" onclick="document.getElementById('import-file').click()" title="JSON 불러오기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      불러오기
+    </button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn btn-danger-outline" onclick="resetAll()">초기화</button>
+    <button class="btn btn-export-tt" onclick="exportToTimetable()" title="확인된 컷을 타임테이블 JSON으로 내보내기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+      타임테이블로
+    </button>
+    <button class="btn btn-primary" onclick="printPDF()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      PDF 저장
+    </button>
+  </div>
+</header>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <div class="tab active" id="tab-project" onclick="switchTab('project')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    프로젝트 정보
+  </div>
+  <div class="tab" id="tab-cuts" onclick="switchTab('cuts')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    컷 체크
+    <span class="tab-count" id="tab-count">0</span>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+  <!-- Project Tab -->
+  <div class="project-tab" id="project-tab">
+    <div class="project-inner">
+
+      <!-- PDF Import -->
+      <div class="pdf-import-zone" id="pdf-zone" onclick="document.getElementById('pdf-input').click()">
+        <div class="pdf-import-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="pdf-import-title">PDF 기획서 자동 불러오기</div>
+        <div class="pdf-import-sub">PDF를 업로드하면 각 페이지가 이미지로 변환되어 컷별로 자동 첨부됩니다</div>
+      </div>
+      <input type="file" id="pdf-input" accept=".pdf" style="display:none">
+
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-label">
+          <span id="progress-text">PDF 처리 중...</span>
+          <span id="progress-count">0 / 0</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card accent"><div class="metric-label">TOTAL</div><div class="metric-value" id="m-total">0</div></div>
+        <div class="metric-card"><div class="metric-label">사진</div><div class="metric-value" id="m-photo">0</div></div>
+        <div class="metric-card"><div class="metric-label">영상·GIF</div><div class="metric-value" id="m-video">0</div></div>
+        <div class="metric-card"><div class="metric-label">누끼</div><div class="metric-value" id="m-nukki">0</div></div>
+        <div class="metric-card"><div class="metric-label">확인됨</div><div class="metric-value" id="m-confirmed">0</div></div>
+      </div>
+
+      <!-- Project info -->
+      <div class="project-section">
+        <div class="section-title">프로젝트 정보</div>
+        <div class="info-grid">
+          <div class="field">
+            <label class="field-label">프로젝트명 / 클라이언트</label>
+            <input type="text" class="field-input" id="p-name" placeholder="예: 한끼통살 크리스피 치킨" oninput="saveState()">
+          </div>
+          <div class="field">
+            <label class="field-label">요청 부서 / 담당자</label>
+            <input type="text" class="field-input" id="p-owner" placeholder="예: 마케팅팀 / 홍길동" oninput="saveState()">
+          </div>
+          <div class="field">
+            <label class="field-label">접수일</label>
+            <input type="date" class="field-input" id="p-received" oninput="saveState()">
+          </div>
+          <div class="field">
+            <label class="field-label">촬영일</label>
+            <input type="date" class="field-input" id="p-shoot" oninput="saveState()">
+          </div>
+          <div class="field">
+            <label class="field-label">촬영 장소</label>
+            <input type="text" class="field-input" id="p-location" placeholder="예: 본사 스튜디오 A" oninput="saveState()">
+          </div>
+          <div class="field">
+            <label class="field-label">납기일</label>
+            <input type="date" class="field-input" id="p-due" oninput="saveState()">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">전체 메모 / 특이사항</label>
+          <textarea class="field-textarea" id="p-memo" placeholder="미팅 전체 메모, 주의사항, 전달사항 등" oninput="saveState()"></textarea>
+        </div>
+        <div class="storage-warning" id="storage-warning">
+          저장 용량이 부족합니다. 기존 데이터를 JSON으로 내보낸 뒤 초기화해주세요.
+        </div>
+      </div>
+
+      <!-- Printable cut list (print only) -->
+      <div class="print-all-cuts" id="print-cuts"></div>
+
+    </div>
+  </div>
+
+  <!-- Cut View (split) -->
+  <div class="cut-view hidden" id="cut-view">
+
+    <!-- Thumbnail strip -->
+    <div class="thumb-strip" id="thumb-strip"></div>
+
+    <!-- Split layout -->
+    <div class="split-layout" id="split-layout">
+      <!-- Image panel (left) -->
+      <div class="image-panel">
+        <div class="image-actions" id="image-actions" style="display:none">
+          <button class="image-action-btn" onclick="openImageModal()" title="크게 보기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            크게
+          </button>
+          <button class="image-action-btn" onclick="changeCutImage()" title="이미지 변경">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"/></svg>
+            변경
+          </button>
+        </div>
+        <div class="image-container" id="image-container">
+          <div class="image-empty">
+            <div class="image-empty-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="image-empty-title">이미지 없음</div>
+            <div class="image-empty-sub">클릭해서 이미지를 첨부하세요</div>
+          </div>
+        </div>
+        <input type="file" id="cut-image-input" accept="image/*" style="display:none" onchange="handleCutImageChange(event)">
+      </div>
+
+      <!-- Form panel (right) -->
+      <div class="form-panel" id="form-panel">
+        <div class="form-scroll" id="form-scroll"></div>
+      </div>
+    </div>
+
+    <!-- Navigation bar -->
+    <div class="nav-bar">
+      <div class="nav-left">
+        <button class="btn" onclick="prevCut()" id="btn-prev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          이전
+        </button>
+      </div>
+      <div class="nav-center">
+        <input type="number" id="cut-goto" min="1" onchange="gotoCut(parseInt(this.value) - 1)">
+        <span>/</span>
+        <span id="cut-total">0</span>
+        <span class="shortcuts-help">
+          <span class="kbd">←</span><span class="kbd">→</span> 이동
+          <span class="kbd">C</span> 확인
+          <span class="kbd">R</span> 수정
+        </span>
+      </div>
+      <div class="nav-right">
+        <label class="auto-advance">
+          <input type="checkbox" id="auto-advance" onchange="saveUIPref()"> 자동 다음
+        </label>
+        <button class="btn" onclick="nextCut()" id="btn-next">
+          다음
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <button class="modal-close" onclick="closeModal()">×</button>
+  <img id="modal-img" src="" alt="">
+</div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  var pdfJsReady = false;
+  function setupPdfJs() {
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfJsReady = true;
+    }
+  }
+  setupPdfJs();
+  window.addEventListener('load', setupPdfJs);
+</script>
+
+<script>
+  // ──────── Constants ────────
+  const STORAGE_KEY = 'shooting_brief_split_v1';
+  const UI_KEY = 'shooting_brief_ui_v1';
+  const TYPES = ['사진', '영상', '누끼', 'GIF'];
+  const STATUSES = [
+    { key: 'pending', label: '확인 전', icon: 'M12 6v6l4 2' },
+    { key: 'confirmed', label: '확인됨', icon: 'M20 6L9 17l-5-5' },
+    { key: 'revise', label: '수정요청', icon: 'M12 9v4m0 4h.01' }
+  ];
+  const COLOR_PRESETS = [
+    { name: '화이트', hex: '#FFFFFF' },
+    { name: '베이지', hex: '#EDE8DC' },
+    { name: '대리석', hex: '#E8E8E8' },
+    { name: '노랑', hex: '#F2C94C' },
+    { name: '블루', hex: '#3B82F6' },
+    { name: '레드', hex: '#DC2626' },
+    { name: '그린', hex: '#16A34A' },
+    { name: '블랙', hex: '#1A1A1A' }
+  ];
+  const MAX_IMAGE_WIDTH = 1400;
+  const IMAGE_QUALITY = 0.75;
+  const PDF_RENDER_SCALE = 1.5;
+
+  // ──────── State ────────
+  let state = {
+    project: {},
+    cuts: []
+  };
+  let currentTab = 'project';
+  let currentCutIdx = 0;
+  let saveTimer = null;
+
+  // ──────── Init ────────
+  function init() {
+    loadState();
+    loadUIPref();
+    renderProject();
+    renderMetrics();
+    updateTabCount();
+    setupPDFZone();
+    setupKeyboard();
+    setupPasteHandler();
+    // If has cuts, start on cuts tab
+    if (state.cuts.length > 0) {
+      switchTab('cuts');
+    }
+  }
+
+  function emptyCut() {
+    return {
+      id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      num: '',
+      type: '사진',
+      product: '',
+      quantity: '',
+      bgColor: '#FFFFFF',
+      bgName: '',
+      angle: '',
+      props: [],
+      comment: '',
+      status: 'pending',
+      image: null
+    };
+  }
+
+  // ──────── Persistence ────────
+  function saveState() {
+    flashSaving();
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      state.project.name = val('p-name');
+      state.project.owner = val('p-owner');
+      state.project.received = val('p-received');
+      state.project.shoot = val('p-shoot');
+      state.project.location = val('p-location');
+      state.project.due = val('p-due');
+      state.project.memo = val('p-memo');
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        document.getElementById('storage-warning').classList.remove('show');
+        flashSaved();
+      } catch (e) {
+        document.getElementById('storage-warning').classList.add('show');
+        document.getElementById('autosave-text').textContent = '저장 실패';
+      }
+      renderMetrics();
+      updateTabCount();
+      updatePrintCuts();
+    }, 300);
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try { state = JSON.parse(raw); } catch (e) {}
+    }
+    if (!state.cuts) state.cuts = [];
+    if (!state.project) state.project = {};
+  }
+
+  function loadUIPref() {
+    const raw = localStorage.getItem(UI_KEY);
+    if (raw) {
+      try {
+        const ui = JSON.parse(raw);
+        if (ui.autoAdvance) document.getElementById('auto-advance').checked = true;
+      } catch (e) {}
+    }
+  }
+
+  function saveUIPref() {
+    try {
+      localStorage.setItem(UI_KEY, JSON.stringify({
+        autoAdvance: document.getElementById('auto-advance').checked
+      }));
+    } catch (e) {}
+  }
+
+  function val(id) { return document.getElementById(id).value; }
+
+  function flashSaving() {
+    document.getElementById('autosave-dot').classList.add('saving');
+    document.getElementById('autosave-text').textContent = '저장 중...';
+  }
+  function flashSaved() {
+    document.getElementById('autosave-dot').classList.remove('saving');
+    document.getElementById('autosave-text').textContent = '자동저장됨';
+  }
+
+  function resetAll() {
+    if (!confirm('모든 입력 내용이 삭제됩니다. 정말 초기화할까요?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = { project: {}, cuts: [] };
+    currentCutIdx = 0;
+    renderProject();
+    renderMetrics();
+    updateTabCount();
+    switchTab('project');
+  }
+
+  function exportJSON() {
+    const name = (state.project.name || 'shooting_brief').replace(/\s+/g, '_');
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + '_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ──────── 타임테이블 내보내기 ────────
+  function exportToTimetable() {
+    const allCuts = state.cuts || [];
+    const confirmed = allCuts.filter(c => c.status === 'confirmed');
+    const source = confirmed.length > 0 ? confirmed : allCuts;
+
+    if (source.length === 0) {
+      alert('내보낼 컷이 없습니다.\n컷을 먼저 추가하거나 확인 상태로 변경해주세요.');
+      return;
+    }
+
+    if (confirmed.length === 0) {
+      if (!confirm('확인된 컷이 없습니다.\n전체 ' + allCuts.length + '개 컷을 모두 내보낼까요?')) return;
+    }
+
+    // 카테고리 매핑: 브리프 type → 타임테이블 category
+    const CAT_MAP = { '사진': '사진', '영상': '영상', 'GIF': '영상', '누끼': '누끼' };
+    const p = state.project || {};
+
+    const ttState = {
+      project: {
+        name:      p.name     || '',
+        date:      p.shoot    || '',
+        startTime: '10:00',
+        location:  p.location || '',
+        manager:   p.owner    || '',
+        memo:      p.memo     || ''
+      },
+      defaultBuffer: 10,
+      autoBuffer: true,
+      rows: source.map((c, i) => {
+        const titleParts = [c.product, c.quantity ? '×' + c.quantity : ''].filter(Boolean);
+        const noteParts  = [c.angle, c.comment, (c.props||[]).join(', ')].filter(Boolean);
+        return {
+          id:        Date.now() + i + Math.random(),
+          category:  CAT_MAP[c.type] || '사진',
+          title:     titleParts.join(' ') || ('Cut ' + (c.num || (i+1))),
+          importance:'보통',
+          duration:  30,
+          buffer:    10,
+          cuts:      1,
+          set:       c.bgName || '',
+          note:      noteParts.join(' / '),
+          done:      false,
+          imageData: ''
+        };
+      })
+    };
+
+    const projectName = (p.name || 'timetable').replace(/\s+/g, '_');
+    const dateStr     = p.shoot || new Date().toISOString().slice(0,10);
+    const filename    = projectName + '_timetable_' + dateStr + '.json';
+
+    const blob = new Blob([JSON.stringify(ttState, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('✓ ' + source.length + '개 컷 내보내기 완료\n타임테이블에서 "불러오기"로 임포트하세요');
+  }
+
+  function showToast(msg) {
+    let toast = document.getElementById('tt-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'tt-toast';
+      toast.style.cssText = [
+        'position:fixed', 'bottom:28px', 'left:50%', 'transform:translateX(-50%)',
+        'background:#1a1a1a', 'color:#fff', 'padding:12px 20px', 'border-radius:10px',
+        'font-size:13px', 'line-height:1.6', 'white-space:pre-line', 'text-align:center',
+        'box-shadow:0 4px 20px rgba(0,0,0,0.3)', 'z-index:9999',
+        'transition:opacity 0.3s', 'pointer-events:none'
+      ].join(';');
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+  }
+
+  function importJSON(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.cuts || !Array.isArray(data.cuts)) throw new Error('형식 오류');
+        state = data;
+        if (!state.project) state.project = {};
+        saveState();
+        renderProject();
+        renderMetrics();
+        updateTabCount();
+        if (state.cuts.length > 0) {
+          currentCutIdx = 0;
+          switchTab('cuts');
+        }
+      } catch (err) {
+        alert('JSON 파일을 읽을 수 없습니다: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  // ──────── Tab Switching ────────
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-project').classList.toggle('active', tab === 'project');
+    document.getElementById('tab-cuts').classList.toggle('active', tab === 'cuts');
+    document.getElementById('project-tab').classList.toggle('hidden', tab !== 'project');
+    document.getElementById('cut-view').classList.toggle('hidden', tab !== 'cuts');
+    if (tab === 'cuts') {
+      renderCutView();
+    }
+  }
+
+  function updateTabCount() {
+    document.getElementById('tab-count').textContent = state.cuts.length;
+  }
+
+  // ──────── PDF Import ────────
+  function setupPDFZone() {
+    const zone = document.getElementById('pdf-zone');
+    const input = document.getElementById('pdf-input');
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.toLowerCase().endsWith('.pdf')) {
+        processPDF(file);
+      } else if (file) {
+        alert('PDF 파일만 업로드 가능합니다.');
+      }
+    });
+    input.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) processPDF(file);
+      e.target.value = '';
+    });
+  }
+
+  async function processPDF(file) {
+    setupPdfJs();
+    if (typeof pdfjsLib === 'undefined' || !pdfJsReady) {
+      alert('PDF 처리 라이브러리 로드에 실패했습니다.\n인터넷 연결을 확인하고 페이지를 새로고침해주세요.');
+      return;
+    }
+
+    const proceed = state.cuts.length === 0 || confirm(
+      '이미 ' + state.cuts.length + '개 컷이 있습니다.\n\n"확인": 기존 뒤에 추가\n"취소": 처리 중단'
+    );
+    if (!proceed) return;
+
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const progressCount = document.getElementById('progress-count');
+
+    progressWrap.classList.add('show');
+    progressText.textContent = 'PDF 파일 읽는 중...';
+    progressFill.style.width = '5%';
+    progressFill.style.background = 'var(--red)';
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const numPages = pdf.numPages;
+
+      if (!state.project.name) {
+        const name = file.name.replace(/\.pdf$/i, '').replace(/_/g, ' ');
+        state.project.name = name;
+        document.getElementById('p-name').value = name;
+      }
+
+      progressText.textContent = '페이지 이미지 변환 중...';
+      const startNum = state.cuts.length;
+
+      for (let i = 1; i <= numPages; i++) {
+        progressCount.textContent = i + ' / ' + numPages;
+        progressFill.style.width = (5 + (i / numPages) * 90) + '%';
+
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: PDF_RENDER_SCALE });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+        let imageData = canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+        if (canvas.width > MAX_IMAGE_WIDTH) {
+          const scale = MAX_IMAGE_WIDTH / canvas.width;
+          const small = document.createElement('canvas');
+          small.width = MAX_IMAGE_WIDTH;
+          small.height = canvas.height * scale;
+          small.getContext('2d').drawImage(canvas, 0, 0, small.width, small.height);
+          imageData = small.toDataURL('image/jpeg', IMAGE_QUALITY);
+        }
+
+        const cut = emptyCut();
+        cut.num = String(startNum + i);
+        cut.image = imageData;
+        state.cuts.push(cut);
+
+        await new Promise(r => setTimeout(r, 10));
+      }
+
+      saveState();
+      renderProject();
+      renderMetrics();
+      updateTabCount();
+
+      progressFill.style.width = '100%';
+      progressText.textContent = '완료 — ' + numPages + '개 컷 생성됨. 컷 체크 탭으로 이동합니다...';
+
+      setTimeout(() => {
+        progressWrap.classList.remove('show');
+        currentCutIdx = startNum;
+        switchTab('cuts');
+      }, 1200);
+
+    } catch (err) {
+      console.error(err);
+      progressText.textContent = '오류: ' + err.message;
+      progressFill.style.width = '100%';
+      setTimeout(() => progressWrap.classList.remove('show'), 3500);
+    }
+  }
+
+  // ──────── Image helpers ────────
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > MAX_IMAGE_WIDTH) { h = (MAX_IMAGE_WIDTH / w) * h; w = MAX_IMAGE_WIDTH; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleCutImageChange(e) {
+    const file = (e.target.files || [])[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const dataUrl = await compressImage(file);
+      const c = state.cuts[currentCutIdx];
+      if (c) {
+        c.image = dataUrl;
+        saveState();
+        renderCutView();
+      }
+    } catch (err) { alert('이미지 처리 실패'); }
+    e.target.value = '';
+  }
+
+  function changeCutImage() {
+    document.getElementById('cut-image-input').click();
+  }
+
+  function openImageModal() {
+    const c = state.cuts[currentCutIdx];
+    if (!c || !c.image) return;
+    document.getElementById('modal-img').src = c.image;
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+
+  function setupPasteHandler() {
+    document.addEventListener('paste', async e => {
+      if (currentTab !== 'cuts') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            try {
+              const dataUrl = await compressImage(file);
+              const c = state.cuts[currentCutIdx];
+              if (c) {
+                c.image = dataUrl;
+                saveState();
+                renderCutView();
+              }
+            } catch (err) { console.error(err); }
+            break;
+          }
+        }
+      }
+    });
+  }
+
+  // ──────── Project Render ────────
+  function renderProject() {
+    const p = state.project || {};
+    document.getElementById('p-name').value = p.name || '';
+    document.getElementById('p-owner').value = p.owner || '';
+    document.getElementById('p-received').value = p.received || '';
+    document.getElementById('p-shoot').value = p.shoot || '';
+    document.getElementById('p-location').value = p.location || '';
+    document.getElementById('p-due').value = p.due || '';
+    document.getElementById('p-memo').value = p.memo || '';
+  }
+
+  function renderMetrics() {
+    const cuts = state.cuts || [];
+    const photos = cuts.filter(c => c.type === '사진').length;
+    const videos = cuts.filter(c => c.type === '영상' || c.type === 'GIF').length;
+    const nukkis = cuts.filter(c => c.type === '누끼').length;
+    const confirmed = cuts.filter(c => c.status === 'confirmed').length;
+    document.getElementById('m-total').textContent = cuts.length;
+    document.getElementById('m-photo').textContent = photos;
+    document.getElementById('m-video').textContent = videos;
+    document.getElementById('m-nukki').textContent = nukkis;
+    document.getElementById('m-confirmed').textContent = confirmed + ' / ' + cuts.length;
+  }
+
+  // ──────── Cut View ────────
+  function renderCutView() {
+    if (state.cuts.length === 0) {
+      document.getElementById('thumb-strip').innerHTML = '';
+      document.getElementById('split-layout').innerHTML =
+        '<div class="empty-state" style="grid-column:1/-1">' +
+          '<div class="empty-state-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg></div>' +
+          '<div class="empty-state-title">아직 컷이 없습니다</div>' +
+          '<div class="empty-state-sub">"프로젝트 정보" 탭에서 PDF를 업로드하거나<br>아래 버튼으로 수동 추가하세요</div>' +
+          '<button class="btn btn-primary" onclick="addCut()">+ 컷 추가</button>' +
+        '</div>';
+      document.getElementById('cut-total').textContent = '0';
+      document.getElementById('cut-goto').value = '';
+      return;
+    }
+
+    if (currentCutIdx >= state.cuts.length) currentCutIdx = state.cuts.length - 1;
+    if (currentCutIdx < 0) currentCutIdx = 0;
+
+    renderThumbs();
+    renderCurrentCut();
+
+    document.getElementById('cut-total').textContent = state.cuts.length;
+    document.getElementById('cut-goto').value = currentCutIdx + 1;
+    document.getElementById('cut-goto').max = state.cuts.length;
+  }
+
+  function renderThumbs() {
+    const strip = document.getElementById('thumb-strip');
+    const html = state.cuts.map((c, i) => {
+      const activeCls = i === currentCutIdx ? ' active' : '';
+      const statusCls = c.status === 'confirmed' ? ' status-confirmed' : c.status === 'revise' ? ' status-revise' : '';
+      if (c.image) {
+        return '<div class="thumb-item' + activeCls + statusCls + '" style="background-image:url(' + c.image + ')" onclick="gotoCut(' + i + ')">' +
+          '<span class="thumb-num">' + esc(c.num || (i+1)) + '</span>' +
+        '</div>';
+      }
+      return '<div class="thumb-item no-image' + activeCls + statusCls + '" onclick="gotoCut(' + i + ')">' +
+        '<span class="thumb-placeholder">' + esc(c.num || (i+1)) + '</span>' +
+      '</div>';
+    }).join('') +
+    '<button class="thumb-add" onclick="addCut()" title="컷 추가">+</button>';
+
+    strip.innerHTML = html;
+
+    // Scroll active into view
+    setTimeout(() => {
+      const active = strip.querySelector('.thumb-item.active');
+      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 50);
+  }
+
+  function renderCurrentCut() {
+    const c = state.cuts[currentCutIdx];
+    if (!c) return;
+
+    // Rebuild split layout if it was replaced by empty state
+    if (!document.getElementById('image-container')) {
+      document.getElementById('split-layout').innerHTML =
+        '<div class="image-panel">' +
+          '<div class="image-actions" id="image-actions"></div>' +
+          '<div class="image-container" id="image-container"></div>' +
+          '<input type="file" id="cut-image-input" accept="image/*" style="display:none" onchange="handleCutImageChange(event)">' +
+        '</div>' +
+        '<div class="form-panel" id="form-panel">' +
+          '<div class="form-scroll" id="form-scroll"></div>' +
+        '</div>';
+    }
+
+    // Image panel
+    const imgContainer = document.getElementById('image-container');
+    const imgActions = document.getElementById('image-actions');
+    if (c.image) {
+      imgContainer.innerHTML = '<img class="image-display" src="' + c.image + '" onclick="openImageModal()">';
+      imgActions.style.display = 'flex';
+      imgActions.innerHTML =
+        '<button class="image-action-btn" onclick="openImageModal()">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>' +
+          '크게 보기' +
+        '</button>' +
+        '<button class="image-action-btn" onclick="changeCutImage()">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.15 4.36A9 9 0 0 0 20 15"/></svg>' +
+          '변경' +
+        '</button>';
+    } else {
+      imgContainer.innerHTML =
+        '<div class="image-empty" onclick="changeCutImage()" style="cursor:pointer">' +
+          '<div class="image-empty-icon">' +
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' +
+          '</div>' +
+          '<div class="image-empty-title">이미지 없음</div>' +
+          '<div class="image-empty-sub">클릭해서 첨부하거나 Ctrl+V로 붙여넣기</div>' +
+        '</div>';
+      imgActions.style.display = 'none';
+    }
+
+    // Form panel
+    renderFormPanel(c);
+  }
+
+  function renderFormPanel(c) {
+    const typePills = TYPES.map(t =>
+      '<button class="pill ' + (c.type === t ? 'active' : '') + '" onclick="updateCut(\'type\', \'' + t + '\')">' + t + '</button>'
+    ).join('');
+
+    const colorPresets = COLOR_PRESETS.map(p =>
+      '<div class="color-preset ' + (c.bgColor === p.hex ? 'selected' : '') + '" data-hex="' + p.hex + '" style="background:' + p.hex + '" title="' + p.name + '" onclick="selectColor(\'' + p.hex + '\', \'' + p.name + '\')"></div>'
+    ).join('');
+
+    const statusBtns = STATUSES.map(s =>
+      '<button class="status-big-btn ' + (c.status === s.key ? 'active-' + s.key : '') + '" onclick="updateCut(\'status\', \'' + s.key + '\')">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          (s.key === 'confirmed' ? '<polyline points="20 6 9 17 4 12"/>' :
+           s.key === 'revise' ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' :
+           '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>') +
+        '</svg>' +
+        s.label +
+      '</button>'
+    ).join('');
+
+    const propsHtml = (c.props || []).map((p, idx) =>
+      '<span class="tag-chip">' + esc(p) + '<span class="rm" onclick="removeTag(' + idx + ')">×</span></span>'
+    ).join('');
+
+    const formHTML =
+      '<div class="cut-header-info">' +
+        '<span class="cut-num-display">Cut ' + esc(c.num || '?') + '</span>' +
+        '<span class="cut-position">' + (currentCutIdx + 1) + ' / ' + state.cuts.length + '</span>' +
+      '</div>' +
+
+      '<div class="status-bar-row">' + statusBtns + '</div>' +
+
+      '<div class="form-section">' +
+        '<div class="form-row">' +
+          '<div class="field">' +
+            '<label class="field-label">컷 번호</label>' +
+            '<input type="text" class="field-input" id="f-num" value="' + esc(c.num) + '" placeholder="예: No.1 또는 1-2" oninput="updateCut(\'num\', this.value)">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field-label">유형</label>' +
+            '<div class="pill-group">' + typePills + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="form-row">' +
+          '<div class="field">' +
+            '<label class="field-label">제품명</label>' +
+            '<input type="text" class="field-input" id="f-product" value="' + esc(c.product) + '" placeholder="예: 현미 크리스피 치킨 후라이드" oninput="updateCut(\'product\', this.value)">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label class="field-label">수량</label>' +
+            '<input type="text" class="field-input" id="f-qty" value="' + esc(c.quantity) + '" placeholder="예: 2종, 1ea" oninput="updateCut(\'quantity\', this.value)">' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="form-section">' +
+        '<div class="field" style="margin-bottom:10px">' +
+          '<label class="field-label">배경 색상</label>' +
+          '<div class="color-row">' + colorPresets +
+            '<div class="color-custom-wrap">' +
+              '<input type="color" value="' + c.bgColor + '" onchange="selectColor(this.value, \'커스텀\')">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field-label">배경 설명</label>' +
+          '<input type="text" class="field-input" id="f-bgname" value="' + esc(c.bgName) + '" placeholder="예: 대리석 배경지, 원목 도마" oninput="updateCut(\'bgName\', this.value)">' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="form-section">' +
+        '<div class="field">' +
+          '<label class="field-label">앵글 / 구도</label>' +
+          '<input type="text" class="field-input" id="f-angle" value="' + esc(c.angle) + '" placeholder="예: 45도 탑뷰 + 세로형" oninput="updateCut(\'angle\', this.value)">' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="form-section">' +
+        '<div class="field">' +
+          '<label class="field-label">소품 / 재료</label>' +
+          '<div class="tags-input" id="tags-input" onclick="document.getElementById(\'tag-input\').focus()">' +
+            propsHtml +
+            '<input type="text" id="tag-input" placeholder="입력 후 Enter (쉼표로 여러개)" onkeydown="handleTagKey(event)">' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="form-section">' +
+        '<div class="field">' +
+          '<label class="field-label">코멘트 / 메모</label>' +
+          '<textarea class="field-textarea" id="f-comment" placeholder="확인사항, 미팅 메모, 주의사항" oninput="updateCut(\'comment\', this.value)" style="min-height:80px">' + esc(c.comment) + '</textarea>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="form-section" style="border-bottom:none">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          '<button class="btn" onclick="duplicateCut()">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+            '복제' +
+          '</button>' +
+          '<button class="btn" onclick="moveCut(-1)">← 앞으로</button>' +
+          '<button class="btn" onclick="moveCut(1)">뒤로 →</button>' +
+          '<button class="btn btn-danger-outline" style="margin-left:auto" onclick="deleteCut()">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>' +
+            '삭제' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('form-scroll').innerHTML = formHTML;
+  }
+
+  // ──────── Cut actions ────────
+  function updateCut(key, value) {
+    const c = state.cuts[currentCutIdx];
+    if (!c) return;
+    c[key] = value;
+    saveState();
+    if (key === 'type') {
+      renderMetrics();
+      // Update type pill UI
+      document.querySelectorAll('.pill-group .pill').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === value);
+      });
+    }
+    if (key === 'status') {
+      renderMetrics();
+      renderThumbs();
+      // update status buttons
+      document.querySelectorAll('.status-big-btn').forEach((btn, i) => {
+        const s = STATUSES[i];
+        btn.className = 'status-big-btn' + (c.status === s.key ? ' active-' + s.key : '');
+      });
+      // Auto-advance
+      if (value === 'confirmed' && document.getElementById('auto-advance').checked) {
+        setTimeout(() => nextCut(), 300);
+      }
+    }
+    if (key === 'num') {
+      renderThumbs();
+      const el = document.querySelector('.cut-num-display');
+      if (el) el.textContent = 'Cut ' + (value || '?');
+    }
+  }
+
+  function selectColor(hex, name) {
+    const c = state.cuts[currentCutIdx];
+    if (!c) return;
+    c.bgColor = hex;
+    if (name && name !== '커스텀' && !c.bgName) {
+      c.bgName = name;
+      const input = document.getElementById('f-bgname');
+      if (input) input.value = name;
+    }
+    saveState();
+    // Update color preset UI without full re-render (preserves typing state)
+    document.querySelectorAll('.color-preset').forEach(el => {
+      el.classList.toggle('selected', el.getAttribute('data-hex') === hex);
+    });
+    const colorInput = document.querySelector('.color-custom-wrap input[type=color]');
+    if (colorInput) colorInput.value = hex;
+  }
+
+  function addCut() {
+    const cut = emptyCut();
+    cut.num = String(state.cuts.length + 1);
+    state.cuts.push(cut);
+    currentCutIdx = state.cuts.length - 1;
+    saveState();
+    updateTabCount();
+    renderMetrics();
+    if (currentTab !== 'cuts') {
+      switchTab('cuts');
+    } else {
+      renderCutView();
+    }
+  }
+
+  function deleteCut() {
+    if (state.cuts.length === 0) return;
+    if (!confirm('이 컷을 삭제할까요?')) return;
+    state.cuts.splice(currentCutIdx, 1);
+    if (currentCutIdx >= state.cuts.length) currentCutIdx = state.cuts.length - 1;
+    saveState();
+    updateTabCount();
+    renderMetrics();
+    renderCutView();
+  }
+
+  function duplicateCut() {
+    const c = state.cuts[currentCutIdx];
+    if (!c) return;
+    const copy = JSON.parse(JSON.stringify(c));
+    copy.id = 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    copy.num = c.num + '-copy';
+    state.cuts.splice(currentCutIdx + 1, 0, copy);
+    currentCutIdx++;
+    saveState();
+    updateTabCount();
+    renderMetrics();
+    renderCutView();
+  }
+
+  function moveCut(dir) {
+    const i = currentCutIdx;
+    const j = i + dir;
+    if (j < 0 || j >= state.cuts.length) return;
+    [state.cuts[i], state.cuts[j]] = [state.cuts[j], state.cuts[i]];
+    currentCutIdx = j;
+    saveState();
+    renderCutView();
+  }
+
+  // ──────── Navigation ────────
+  function prevCut() {
+    if (currentCutIdx > 0) {
+      currentCutIdx--;
+      renderCutView();
+    }
+  }
+
+  function nextCut() {
+    if (currentCutIdx < state.cuts.length - 1) {
+      currentCutIdx++;
+      renderCutView();
+    }
+  }
+
+  function gotoCut(idx) {
+    if (idx < 0 || idx >= state.cuts.length) return;
+    currentCutIdx = idx;
+    renderCutView();
+  }
+
+  // ──────── Tags ────────
+  function renderTagsOnly() {
+    const c = state.cuts[currentCutIdx];
+    if (!c) return;
+    const wrap = document.getElementById('tags-input');
+    if (!wrap) return;
+    const propsHtml = (c.props || []).map((p, idx) =>
+      '<span class="tag-chip">' + esc(p) + '<span class="rm" onclick="removeTag(' + idx + ')">×</span></span>'
+    ).join('');
+    wrap.innerHTML = propsHtml +
+      '<input type="text" id="tag-input" placeholder="입력 후 Enter (쉼표로 여러개)" onkeydown="handleTagKey(event)">';
+    const input = document.getElementById('tag-input');
+    if (input) input.focus();
+  }
+
+  function handleTagKey(e) {
+    if (e.key === 'Enter' || e.key === ',' || e.key === '，') {
+      e.preventDefault();
+      const val = e.target.value.trim();
+      if (!val) return;
+      const c = state.cuts[currentCutIdx];
+      if (!c.props) c.props = [];
+      const parts = val.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+      parts.forEach(p => { if (!c.props.includes(p)) c.props.push(p); });
+      e.target.value = '';
+      saveState();
+      renderTagsOnly();
+    } else if (e.key === 'Backspace' && !e.target.value) {
+      const c = state.cuts[currentCutIdx];
+      if (c.props && c.props.length > 0) {
+        c.props.pop();
+        saveState();
+        renderTagsOnly();
+      }
+    }
+  }
+
+  function removeTag(idx) {
+    const c = state.cuts[currentCutIdx];
+    if (!c.props) return;
+    c.props.splice(idx, 1);
+    saveState();
+    renderTagsOnly();
+  }
+
+  // ──────── Keyboard shortcuts ────────
+  function setupKeyboard() {
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+
+      // Only in cuts tab, not when typing
+      if (currentTab !== 'cuts') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevCut(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); nextCut(); }
+      else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        const c = state.cuts[currentCutIdx];
+        if (c) updateCut('status', c.status === 'confirmed' ? 'pending' : 'confirmed');
+      }
+      else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        const c = state.cuts[currentCutIdx];
+        if (c) updateCut('status', c.status === 'revise' ? 'pending' : 'revise');
+      }
+    });
+  }
+
+  // ──────── Print cuts ────────
+  // ──────── Print ────────
+  function printPDF() {
+    // Ensure print cuts are rendered with latest data
+    updatePrintCuts();
+    // Small delay to let DOM update before printing
+    setTimeout(() => window.print(), 100);
+  }
+
+  function updatePrintCuts() {
+    const el = document.getElementById('print-cuts');
+    if (!el) return;
+    if (state.cuts.length === 0) { el.innerHTML = ''; return; }
+    const header = '<div class="print-section-title">컷 상세 (' + state.cuts.length + '컷)</div>';
+    el.innerHTML = header + state.cuts.map((c, i) => {
+      const imgHtml = c.image
+        ? '<img class="print-cut-img" src="' + c.image + '">'
+        : '<div class="print-cut-img-empty">이미지 없음</div>';
+      const propsStr = (c.props || []).join(', ') || '-';
+      const statusObj = STATUSES.find(s => s.key === c.status) || {};
+      const statusCls = c.status === 'confirmed' ? ' status-confirmed' : c.status === 'revise' ? ' status-revise' : '';
+      const badgeCls = c.status === 'confirmed' ? 'print-badge confirmed' : c.status === 'revise' ? 'print-badge revise' : 'print-badge';
+      const productText = (c.product || '-') + (c.quantity ? ' × ' + c.quantity : '');
+      return '<div class="print-cut' + statusCls + '">' +
+        '<div>' + imgHtml + '</div>' +
+        '<div>' +
+          '<div class="print-cut-title">' +
+            '<span>Cut ' + esc(c.num || (i+1)) + ' · ' + esc(productText) + '</span>' +
+            '<span class="print-cut-badges">' +
+              '<span class="print-badge">' + esc(c.type) + '</span>' +
+              '<span class="' + badgeCls + '">' + esc(statusObj.label || '') + '</span>' +
+            '</span>' +
+          '</div>' +
+          '<div class="print-cut-rows">' +
+            '<div class="print-cut-row"><span class="print-cut-row-key">배경</span><span class="print-cut-row-val">' + esc(c.bgName || '-') + ' ' + (c.bgColor || '') + '</span></div>' +
+            '<div class="print-cut-row"><span class="print-cut-row-key">앵글</span><span class="print-cut-row-val">' + esc(c.angle || '-') + '</span></div>' +
+            '<div class="print-cut-row"><span class="print-cut-row-key">소품</span><span class="print-cut-row-val">' + esc(propsStr) + '</span></div>' +
+          '</div>' +
+          (c.comment ? '<div class="print-cut-comment">' + esc(c.comment) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ──────── Utils ────────
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ──────── Boot ────────
+  init();
+</script>
+</body>
+</html>
