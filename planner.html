@@ -5,7 +5,2073 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>원시트 기획서 시스템 v3.1</title>
 <!--
-  v3.1 변경 사항:
+  v3.1 변경 사항:<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Kim Jiyoung">
+<title>촬영 타임테이블</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+/* ============================================================
+   ROOT VARIABLES & RESET
+   ============================================================ */
+:root {
+  --font-base: "Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-mono: "Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+
+  --color-bg:             #f0f2f5;
+  --color-surface:        #ffffff;
+  --color-border:         #e4e6ea;
+  --color-border-light:   #f0f1f3;
+  --color-text:           #1c1e21;
+  --color-text-secondary: #65676b;
+  --color-text-muted:     #90929a;
+  --color-accent:         #1a1d23;
+  --color-accent-soft:    #3a3d45;
+  --color-primary:        #1877f2;
+  --color-primary-hover:  #166fe5;
+
+  --cat-photo-bar: #1877f2;
+  --cat-video-bar: #e67e22;
+  --cat-break-bar: #27ae60;
+  --cat-lunch-bar: #e74c3c;
+  --cat-break-bg:  #f0faf4;
+  --cat-lunch-bg:  #fff5f5;
+
+  --imp-high: #e74c3c;
+  --imp-mid:  #27ae60;
+  --imp-low:  #b0b3b8;
+
+  --btn-primary-bg:      #1877f2;
+  --btn-primary-text:    #ffffff;
+  --btn-secondary-bg:    #ffffff;
+  --btn-secondary-text:  #1c1e21;
+  --btn-secondary-border:#d8dadf;
+  --btn-danger-text:     #e74c3c;
+  --btn-danger-border:   #fbb9b1;
+
+  --radius:    8px;
+  --radius-sm: 6px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+
+  --space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-base);font-size:14px;line-height:1.5;background:var(--color-bg);color:var(--color-text);-webkit-font-smoothing:antialiased;}
+
+/* LAYOUT */
+.app-wrapper{max-width:1400px;margin:0 auto;padding:20px 24px;}
+
+/* HEADER */
+.app-header{display:flex;align-items:center;gap:var(--space-md);margin-bottom:20px;}
+.app-header h1{font-size:20px;font-weight:700;color:var(--color-text);letter-spacing:-.3px;}
+.app-header .subtitle{display:none;}
+.autosave-status{font-size:11px;color:var(--color-text-muted);margin-left:auto;background:var(--color-surface);border:1px solid var(--color-border);padding:3px 10px;border-radius:20px;}
+.author-badge{font-size:11px;color:var(--color-text-muted);background:var(--color-surface);border:1px solid var(--color-border);padding:3px 10px;border-radius:20px;white-space:nowrap;}
+
+/* TOP SECTION */
+.top-section{display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px;}
+
+/* 프로젝트 카드 */
+.project-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;align-items:stretch;overflow:hidden;}
+.card-label{display:none;}
+.project-grid{display:contents;}
+.project-grid .full-width{display:none;}
+.field-group{display:flex;flex-direction:column;gap:2px;padding:12px 20px;border-right:1px solid var(--color-border-light);flex-shrink:0;}
+.field-group:last-of-type{border-right:none;flex:1;}
+.field-sep,.field-sep-wide{display:none;}
+.field-label{font-size:11px;font-weight:500;color:var(--color-text-muted);white-space:nowrap;letter-spacing:.2px;}
+.field-input{font-family:var(--font-base);font-size:14px;font-weight:500;border:none;background:transparent;color:var(--color-text);outline:none;padding:0;width:100%;min-width:0;}
+.field-input::placeholder{color:var(--color-text-muted);font-weight:400;}
+.field-input:focus{color:var(--color-primary);}
+#projectName{font-weight:600;font-size:15px;min-width:260px;}
+#shootingDate{font-family:var(--font-mono);font-size:13px;width:120px;}
+#startTime{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--color-primary);width:72px;min-width:72px;-webkit-appearance:none;appearance:none;}
+#startTime::-webkit-calendar-picker-indicator{display:none;}
+#startTime::-webkit-datetime-edit-ampm-field{display:none;}
+#startTime::-webkit-inner-spin-button{display:none;}
+#location{min-width:80px;}
+textarea.field-input{display:none;}
+
+/* 요약 카드 */
+.summary-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;align-items:stretch;overflow:hidden;}
+.summary-grid{display:contents;}
+.summary-divider{display:none;}
+.end-time-block{display:contents;}
+.summary-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 18px;border-right:1px solid var(--color-border-light);min-width:78px;text-align:center;}
+.end-time-block-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 20px;background:var(--color-primary);min-width:90px;text-align:center;}
+.summary-value{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--color-text);line-height:1.2;}
+.summary-item-label{font-size:10px;color:var(--color-text-muted);margin-top:2px;white-space:nowrap;font-weight:500;}
+.end-time-value{font-family:var(--font-mono);font-size:18px;font-weight:700;color:#fff;line-height:1.2;}
+.end-time-label{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;white-space:nowrap;font-weight:500;}
+
+/* 툴바 */
+.toolbar-bar{display:flex;align-items:center;gap:6px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 14px;margin-bottom:10px;flex-wrap:wrap;}
+.toolbar-sep{width:1px;height:20px;background:var(--color-border);margin:0 4px;flex-shrink:0;}
+.toolbar-spacer{flex:1;}
+.toolbar-label{font-size:12px;color:var(--color-text-secondary);font-weight:500;white-space:nowrap;}
+.toolbar-num{font-family:var(--font-mono);font-size:13px;width:52px;padding:4px 8px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text);outline:none;text-align:center;}
+.toolbar-num:focus{border-color:var(--color-primary);background:#fff;}
+.toggle-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;user-select:none;white-space:nowrap;}
+.toggle-label input[type="checkbox"]{accent-color:var(--color-primary);}
+
+/* 버튼 */
+.btn{font-family:var(--font-base);font-size:13px;font-weight:500;padding:7px 14px;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:background .12s,color .12s,border-color .12s;white-space:nowrap;line-height:1.4;}
+.btn-primary{background:var(--btn-primary-bg);color:#fff;border-color:var(--btn-primary-bg);}
+.btn-primary:hover{background:var(--color-primary-hover);border-color:var(--color-primary-hover);}
+.btn-secondary{background:var(--btn-secondary-bg);color:var(--btn-secondary-text);border-color:var(--btn-secondary-border);}
+.btn-secondary:hover{background:#f0f2f5;}
+.btn-danger{background:#fff;color:var(--btn-danger-text);border-color:var(--btn-danger-border);}
+.btn-danger:hover{background:#fff5f5;border-color:var(--btn-danger-text);}
+.btn-small{font-size:12px;padding:4px 10px;}
+.btn-break{background:#f0faf4;color:#1a7a40;border-color:#a8e6be;}
+.btn-break:hover{background:#dcf5e7;}
+.btn-lunch{background:#fff5f5;color:#b03020;border-color:#fbb9b1;}
+.btn-lunch:hover{background:#ffe8e5;}
+.btn-undo{background:#fff;color:var(--color-text-secondary);border-color:var(--color-border);}
+.btn-undo:hover{background:var(--color-bg);}
+.btn-undo:disabled{opacity:.4;cursor:not-allowed;}
+
+/* 일괄 수정 */
+.td-select{text-align:center;width:36px;padding:0 6px !important;}
+.row-select-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--color-primary);display:block;margin:auto;}
+tr.row-selected{outline:2px solid var(--color-primary) !important;outline-offset:-2px;background:#f0f6ff !important;}
+.bulk-bar{display:none;align-items:center;gap:6px;background:#1a1d23;color:#fff;padding:10px 16px;margin-bottom:10px;flex-wrap:wrap;font-size:12px;border-radius:var(--radius);}
+.bulk-bar.visible{display:flex;}
+.bulk-bar-label{font-weight:700;white-space:nowrap;font-size:13px;color:#fff;background:var(--color-primary);padding:3px 10px;border-radius:4px;margin-right:4px;}
+.bulk-sep{width:1px;height:22px;background:rgba(255,255,255,.15);margin:0 6px;}
+.bulk-field-label{font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;font-weight:500;}
+.bulk-select{font-family:var(--font-base);font-size:12px;font-weight:500;padding:5px 10px;border:1px solid rgba(255,255,255,.2);background:#ffffff;color:#1c1e21;outline:none;cursor:pointer;border-radius:4px;min-width:90px;}
+.bulk-select option{background:#fff;color:#1c1e21;}
+.bulk-select:focus{border-color:var(--color-primary);box-shadow:0 0 0 2px rgba(24,119,242,.4);}
+input.bulk-select{background:#ffffff;color:#1c1e21;border:1px solid rgba(255,255,255,.2);}
+input.bulk-select::placeholder{color:#b0b3b8;}
+.bulk-btn{font-family:var(--font-base);font-size:12px;font-weight:600;padding:6px 14px;border:1px solid transparent;color:#fff;cursor:pointer;transition:background .12s,opacity .12s;white-space:nowrap;border-radius:4px;}
+.bulk-btn.cancel{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
+.bulk-btn.cancel:hover{background:rgba(255,255,255,.18);}
+.bulk-btn.apply{background:var(--color-primary);border-color:var(--color-primary);}
+.bulk-btn.apply:hover{background:var(--color-primary-hover);}
+.bulk-btn.del-sel{background:#c0392b;border-color:#c0392b;}
+.bulk-btn.del-sel:hover{background:#a93226;}
+
+/* 진행률 바 */
+.progress-bar-wrap{display:flex;align-items:center;gap:var(--space-sm);margin-bottom:10px;font-size:11px;color:var(--color-text-muted);}
+.progress-bar-track{flex:1;height:4px;background:var(--color-border);overflow:hidden;border-radius:2px;}
+.progress-bar-fill{height:100%;background:var(--color-primary);transition:width .3s ease;width:0%;}
+.progress-label{white-space:nowrap;font-family:var(--font-mono);}
+
+/* 테이블 */
+.table-wrapper{overflow-x:auto;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow);}
+#timetable{width:100%;border-collapse:collapse;font-size:13px;}
+#timetable thead th{background:#f8f9fa;color:var(--color-text-secondary);font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:10px 10px;text-align:left;white-space:nowrap;border-bottom:2px solid var(--color-border);border-right:1px solid var(--color-border-light);}
+#timetable thead th:first-child{border-radius:var(--radius) 0 0 0;}
+#timetable thead th:last-child{border-right:none;border-radius:0 var(--radius) 0 0;}
+#timetable thead th.center{text-align:center;}
+#timetable thead th.th-time-group{background:#eef4ff;color:var(--color-primary);border-left:1px solid #c5d8ff;border-right:1px solid #c5d8ff;}
+#timetable tbody tr{border-bottom:1px solid var(--color-border-light);transition:background .1s;}
+#timetable tbody tr:last-child{border-bottom:none;}
+#timetable tbody tr:nth-child(even){background:#fafbfc !important;}
+#timetable tbody tr:nth-child(odd){background:#ffffff !important;}
+#timetable tbody tr:hover{background:#f0f6ff !important;}
+#timetable tbody td{padding:9px 10px;vertical-align:middle;border-right:1px solid var(--color-border-light);}
+#timetable tbody td:last-child{border-right:none;}
+#timetable tbody td.td-time{background:rgba(24,119,242,.03) !important;border-left:1px solid #e8f0fe;border-right:1px solid #e8f0fe;}
+#timetable tbody tr:hover td.td-time{background:rgba(24,119,242,.07) !important;}
+
+.td-done{text-align:center;width:54px;padding:0 8px !important;border-left:1px solid var(--color-border) !important;background:#fafbfc !important;}
+.done-checkbox{width:16px;height:16px;cursor:pointer;accent-color:#27ae60;display:block;margin:auto;}
+tr.row-done td{background:#f6fdf8 !important;}
+tr.row-done .td-done{background:#dcf5e7 !important;}
+tr.row-done .cell-input{color:var(--color-text-muted) !important;}
+tr.row-done .title-input{text-decoration:line-through;color:var(--color-text-muted) !important;}
+tr.row-done .td-time,tr.row-done .td-seq{color:var(--color-text-muted) !important;}
+.done-print-mark{display:none;font-size:8pt;font-weight:700;color:#333;}
+
+.td-seq{font-family:var(--font-mono);font-size:11px;color:var(--color-text-muted);text-align:center;width:32px;font-weight:600;}
+.td-category{position:relative;padding-left:14px !important;min-width:80px;}
+.td-category::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:2px;}
+tr.cat-사진 .td-category::before{background:var(--cat-photo-bar);}
+tr.cat-영상 .td-category::before{background:var(--cat-video-bar);}
+tr.cat-휴식 .td-category::before{background:var(--cat-break-bar);}
+tr.cat-점심 .td-category::before{background:var(--cat-lunch-bar);}
+#timetable tbody tr.cat-휴식:nth-child(even),
+#timetable tbody tr.cat-휴식:nth-child(odd){background:var(--cat-break-bg) !important;}
+#timetable tbody tr.cat-점심:nth-child(even),
+#timetable tbody tr.cat-점심:nth-child(odd){background:var(--cat-lunch-bg) !important;}
+#timetable tbody tr.cat-휴식:hover{background:#d8f5e6 !important;}
+#timetable tbody tr.cat-점심:hover{background:#ffe5e5 !important;}
+tr.cat-휴식 .title-input{color:#1a7a40 !important;font-weight:600;}
+tr.cat-점심 .title-input{color:#b03020 !important;font-weight:600;}
+
+.imp-high,select.imp-high,select.cell-input.imp-high{color:var(--imp-high) !important;font-weight:700;}
+.imp-mid, select.imp-mid, select.cell-input.imp-mid {color:var(--imp-mid)  !important;font-weight:600;}
+.imp-low, select.imp-low, select.cell-input.imp-low {color:var(--imp-low)  !important;}
+select.cell-input.imp-high{background-color:rgba(231,76,60,.07) !important;border:1px solid rgba(231,76,60,.2) !important;border-radius:4px;}
+select.cell-input.imp-mid {background-color:rgba(39,174,96,.07) !important; border:1px solid rgba(39,174,96,.2)  !important;border-radius:4px;}
+select.cell-input.imp-high:focus,select.cell-input.imp-mid:focus,select.cell-input.imp-low:focus{background-color:#fff !important;border-color:var(--color-primary) !important;}
+
+.td-time{font-family:var(--font-mono);font-size:13px;font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;min-width:52px;font-weight:500;color:var(--color-text);}
+.td-num{font-family:var(--font-mono);font-size:13px;text-align:center;font-variant-numeric:tabular-nums;}
+.cell-input{font-family:var(--font-base);font-size:13px;border:1px solid transparent;background:transparent;padding:4px 6px;width:100%;outline:none;color:var(--color-text);transition:border-color .1s,background .1s;min-width:0;border-radius:4px;}
+.cell-input:focus{border-color:var(--color-primary);background:#f0f6ff;}
+.cell-input.num-input{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:center;width:52px;}
+select.cell-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2365676b'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;min-width:0;}
+select.cell-input:focus{background-color:#f0f6ff;border-color:var(--color-primary);}
+.td-note{min-width:100px;}
+.td-note .cell-input{min-width:80px;}
+
+.td-img{width:68px;text-align:center;vertical-align:middle;}
+.img-thumb-wrap{position:relative;display:inline-block;}
+.img-thumb{width:52px;height:52px;object-fit:cover;border:1px solid var(--color-border);cursor:pointer;display:block;border-radius:6px;transition:opacity .15s;}
+.img-thumb:hover{opacity:.85;}
+.img-remove-btn{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#e74c3c;color:#fff;font-size:10px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.img-upload-btn{font-size:20px;color:var(--color-text-muted);cursor:pointer;border:1.5px dashed var(--color-border);background:transparent;width:52px;height:52px;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s;border-radius:6px;}
+.img-upload-btn:hover{border-color:var(--color-primary);color:var(--color-primary);}
+.img-file-input{display:none;}
+
+.td-duration{min-width:100px !important;}
+.td-buf{min-width:100px !important;}
+.td-cuts{width:52px;text-align:center;}
+.dur-wrap{display:flex;align-items:center;gap:3px;justify-content:center;}
+.dur-btn{font-size:13px;font-weight:700;width:22px;height:22px;padding:0;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text-secondary);cursor:pointer;border-radius:4px;line-height:1;flex-shrink:0;transition:background .1s,color .1s;}
+.dur-btn:hover{background:var(--color-primary);color:#fff;border-color:var(--color-primary);}
+
+.td-actions{text-align:center;white-space:nowrap;min-width:90px;}
+.row-btn{font-family:var(--font-base);font-size:11px;padding:4px 7px;border:1px solid var(--color-border);background:#fff;cursor:pointer;color:var(--color-text-secondary);transition:background .1s,color .1s;margin:1px;border-radius:4px;}
+.row-btn:hover{background:var(--color-bg);color:var(--color-text);}
+.row-btn.del{border-color:var(--btn-danger-border);color:var(--btn-danger-text);margin-left:5px;}
+.row-btn.del:hover{background:#fff5f5;border-color:var(--btn-danger-text);}
+
+.td-drag{width:20px;text-align:center;cursor:grab;padding:0 2px !important;}
+.td-drag:active{cursor:grabbing;}
+.drag-handle{font-size:14px;color:#c8cace;user-select:none;line-height:1;}
+tr.dragging{opacity:.4;}
+tr.drag-over{border-top:2px solid var(--color-primary) !important;}
+
+.empty-row td{text-align:center;padding:40px !important;color:var(--color-text-muted);font-size:14px;background:var(--color-surface) !important;}
+.tbl-footer{background:#f8f9fa !important;border-top:2px solid var(--color-border) !important;font-weight:600;}
+.tbl-footer td{padding:9px 10px !important;font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);}
+
+.overtime-warn{display:none;background:#fff9e6;border:1px solid #ffd666;color:#7d5a00;font-size:12px;padding:8px 16px;margin-bottom:10px;border-radius:var(--radius);font-weight:500;}
+.overtime-warn.visible{display:block;}
+
+/* img drop zone 드래그 오버 강조 */
+.img-drop-zone{transition:border-color .15s,background .15s;}
+/* 단축키 배지 */
+kbd.shortcut{font-family:var(--font-mono);font-size:10px;background:#f0f2f5;border:1px solid #d8dadf;border-radius:3px;padding:1px 5px;color:var(--color-text-secondary);}
+.file-modal-section{margin-bottom:4px;}
+.file-modal-section-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:10px;}
+.file-modal-divider{border:none;border-top:1px solid var(--color-border-light);margin:16px 0;}
+
+/* 읽기 전용 */
+body.view-mode .toolbar-bar,body.view-mode .bulk-bar,body.view-mode .progress-bar-wrap,
+body.view-mode .overtime-warn,body.view-mode .td-drag,body.view-mode .td-select,
+body.view-mode .td-actions,body.view-mode .td-done,body.view-mode .td-img,
+body.view-mode .img-remove-btn,body.view-mode .img-upload-btn,
+body.view-mode .dur-btn,body.view-mode .autosave-status,body.view-mode .author-badge,
+body.view-mode thead .th-drag,body.view-mode thead .td-select,
+body.view-mode thead th.th-actions,body.view-mode thead th:last-child{display:none !important;}
+body.view-mode .cell-input,body.view-mode select.cell-input{pointer-events:none;border-color:transparent !important;background:transparent !important;appearance:none;-webkit-appearance:none;background-image:none !important;}
+body.view-mode input[type="date"].field-input,body.view-mode input[type="time"].field-input{color:transparent !important;}
+body.view-mode .date-display,body.view-mode .time-display{display:inline !important;}
+.date-display,.time-display{display:none;position:absolute;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--color-text);pointer-events:none;}
+.view-mode-banner{display:none;background:var(--color-primary);color:#fff;font-size:12px;font-weight:500;padding:10px var(--space-md);text-align:center;letter-spacing:.3px;margin-bottom:16px;border-radius:var(--radius);}
+body.view-mode .view-mode-banner{display:none !important;}
+
+/* 라이트박스 */
+.lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;align-items:center;justify-content:center;}
+.lightbox-overlay.open{display:flex;}
+.lightbox-img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;}
+.lightbox-close{position:absolute;top:20px;right:28px;color:#fff;font-size:32px;cursor:pointer;font-weight:300;background:none;border:none;line-height:1;}
+
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:24px;width:420px;max-width:95vw;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--color-text);}
+.modal-input{font-family:var(--font-base);font-size:13px;border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px 12px;width:100%;outline:none;margin-bottom:var(--space-sm);transition:border-color .15s;}
+.modal-input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px rgba(24,119,242,.1);}
+.modal-actions{display:flex;gap:var(--space-sm);justify-content:flex-end;margin-top:var(--space-md);}
+.template-list{list-style:none;margin-bottom:var(--space-md);}
+.template-item{display:flex;align-items:center;gap:var(--space-sm);padding:10px 0;border-bottom:1px solid var(--color-border-light);font-size:13px;}
+.template-item:last-child{border-bottom:none;}
+.template-name{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.template-meta{font-size:11px;color:var(--color-text-muted);white-space:nowrap;}
+.template-item .btn{padding:5px 12px;font-size:12px;}
+
+/* PRINT */
+@media print {
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  @page{size:A4 landscape;margin:8mm 10mm 8mm 10mm;}
+  body{background:#fff !important;font-size:7pt;line-height:1.2;font-family:var(--font-base);color:#000;}
+  .toolbar-bar,.progress-bar-wrap,.bulk-bar,.overtime-warn,
+  .row-btn,.dur-btn,.td-actions,.td-drag,.td-select,
+  thead th.th-actions,thead th.th-drag,
+  .autosave-status,.app-header .subtitle,.app-header #autosaveStatus,
+  .modal-overlay,.lightbox-overlay,
+  .img-remove-btn,.img-upload-btn,.img-file-input,
+  .field-sep,.field-sep-wide,.btn{display:none !important;}
+  .app-wrapper{max-width:100%;padding:0;}
+  .app-header{margin-bottom:1.5mm;padding-bottom:1mm;border-bottom:.8pt solid #000;display:flex;align-items:baseline;gap:5pt;}
+  .app-header h1{font-size:10pt;font-weight:700;color:#000;}
+  .author-badge{font-size:7pt;color:#888;border:none;background:none;padding:0;margin-left:auto;}
+
+  /* 상단 정보 카드 — 더 컴팩트하게 */
+  .top-section{
+    display:flex;
+    flex-direction:row;
+    align-items:stretch;
+    gap:2mm;
+    margin-bottom:2.5mm;
+  }
+  .project-card{
+    flex:1;
+    display:flex;
+    flex-direction:row;
+    align-items:stretch;
+    border:.6pt solid #ccc;
+    border-radius:0;
+    box-shadow:none;
+    overflow:hidden;
+  }
+  /* 각 필드 그룹 — 더 좁게 */
+  .field-group{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:1.5mm 3.5mm;
+    border-right:.5pt solid #e0e0e0;
+    flex-shrink:0;
+  }
+  .field-group:last-of-type{
+    flex:1;
+    border-right:none;
+  }
+  .field-label{
+    font-size:5pt;
+    color:#999;
+    font-weight:600;
+    letter-spacing:.2pt;
+    margin-bottom:.5pt;
+    white-space:nowrap;
+  }
+  .field-input{
+    font-size:7.5pt;
+    font-family:var(--font-base);
+    color:#000;
+    border:none !important;
+    background:transparent !important;
+    padding:0;
+    width:100%;
+    font-weight:500;
+  }
+  #projectName{font-size:8.5pt;font-weight:700;min-width:50mm;}
+  #shootingDate,#startTime{font-family:var(--font-mono);font-size:7pt;}
+  #startTime{color:#1877f2;}
+  select.field-input{background-image:none !important;appearance:none;-webkit-appearance:none;}
+
+  /* 요약 카드 */
+  .summary-card{
+    display:flex;
+    flex-direction:row;
+    align-items:stretch;
+    border:.6pt solid #ccc;
+    border-radius:0;
+    box-shadow:none;
+    flex-shrink:0;
+  }
+  .summary-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:1.5mm 4mm;
+    border-right:.5pt solid #e0e0e0;
+    min-width:0;
+    text-align:center;
+  }
+  .summary-value{font-size:7.5pt !important;font-weight:700;color:#000 !important;font-family:var(--font-mono);white-space:nowrap;}
+  .summary-item-label{font-size:4.5pt !important;color:#999 !important;margin-top:.5pt;white-space:nowrap;}
+  .end-time-block-inner{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:1.5mm 5mm;
+    background:#1877f2 !important;
+    text-align:center;
+    min-width:0;
+  }
+  .end-time-value{font-size:11pt !important;color:#fff !important;font-family:var(--font-mono);font-weight:700;white-space:nowrap;}
+  .end-time-label{font-size:4.5pt !important;color:rgba(255,255,255,.85) !important;margin-top:.5pt;white-space:nowrap;}
+
+  /* 테이블 */
+  .table-wrapper{border:.6pt solid #ccc;overflow:visible;border-radius:0;box-shadow:none;}
+  #timetable{font-size:7.5pt;line-height:1.25;page-break-inside:auto;width:100%;}
+  #timetable thead{display:table-header-group;}
+  #timetable tbody tr{page-break-inside:avoid;}
+  #timetable thead th{background:#f0f0f0 !important;color:#333 !important;font-size:6pt;padding:2.5pt 4pt;border-right:.5pt solid #ddd;border-bottom:1pt solid #bbb;white-space:nowrap;}
+  #timetable thead th:last-child{border-right:none;}
+  #timetable thead th.th-time-group{background:#e8f0fe !important;color:#1877f2 !important;}
+  #timetable tbody td{padding:3.5pt 4pt;border-right:.5pt solid #eee;border-bottom:.5pt solid #eee;vertical-align:middle;}
+  #timetable tbody tr:last-child td{border-bottom:none;}
+  #timetable tbody tr:nth-child(even),#timetable tbody tr:nth-child(odd){background:#fff !important;}
+  tr.cat-사진 .td-category::before{background:#1877f2 !important;width:2pt;}
+  tr.cat-영상 .td-category::before{background:#e67e22 !important;width:2pt;}
+  tr.cat-휴식 .td-category::before{background:#27ae60 !important;width:2pt;}
+  tr.cat-점심 .td-category::before{background:#e74c3c !important;width:2pt;}
+  tr.cat-휴식{background:#edfaf3 !important;}
+  tr.cat-점심{background:#feeded !important;}
+  .imp-high,select.imp-high,select.cell-input.imp-high{font-weight:700 !important;color:#c0392b !important;}
+  .imp-mid, select.imp-mid, select.cell-input.imp-mid{font-weight:500 !important;color:#27ae60 !important;}
+  .imp-low, select.imp-low, select.cell-input.imp-low{color:#999 !important;}
+  .cell-input,select.cell-input{border:none !important;background:transparent !important;padding:0 !important;font-size:7.5pt;appearance:none;-webkit-appearance:none;background-image:none !important;}
+  .done-checkbox{display:none !important;}
+  .done-print-mark{display:inline !important;}
+  tr.row-done td{background:#f5fdf7 !important;}
+  tr.row-done .td-done{background:#dcf5e7 !important;}
+  tr.row-done .title-input{text-decoration:line-through !important;}
+  tr.row-done .cell-input,tr.row-done .td-time,tr.row-done .td-seq{color:#999 !important;}
+  .td-done{background:#fafafa !important;border-left:.5pt solid #ddd !important;}
+  .td-time,.td-num{font-size:7pt;}
+  .td-cuts .cell-input{text-align:center;}
+  /* 이미지 크게 */
+  .img-thumb{width:52pt;height:52pt;border:.5pt solid #ccc;border-radius:3pt;object-fit:cover;}
+  .td-img{width:58pt;text-align:center;vertical-align:middle;}
+  .td-note{min-width:0;word-break:break-all;white-space:normal;max-width:80pt;}
+  .td-note .cell-input{white-space:normal;word-break:break-all;overflow-wrap:break-word;}
+  .tbl-footer{background:#f5f5f5 !important;border-top:1.5pt solid #aaa !important;}
+  .tbl-footer td{font-size:7pt;padding:2.5pt 4pt !important;color:#333;}
+  .tbl-footer .footer-hide{display:none !important;}
+  .tbl-footer .td-seq{text-align:left !important;padding-left:4pt !important;}
+}
+
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <div class="app-header">
+    <h1>촬영 타임테이블</h1>
+    <span class="subtitle">SHOOTING SCHEDULE</span>
+    <span class="autosave-status" id="autosaveStatus">저장됨</span>
+    <span class="author-badge">만든이 · Kim Jiyoung</span>
+  </div>
+
+  <!-- 읽기 전용 배너 (URL ?view=1 일 때만 표시) -->
+  <div class="view-mode-banner">
+    👁 읽기 전용 모드 — 편집할 수 없습니다. 편집하려면 원본 링크를 열어주세요.
+  </div>
+
+  <!-- 프로젝트 정보 + 요약 -->
+  <div class="top-section">
+    <div class="project-card">
+      <div class="project-grid">
+        <div class="field-group">
+          <label class="field-label" for="projectName">프로젝트명</label>
+          <input type="text" id="projectName" class="field-input" placeholder="프로젝트명을 입력하세요">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="shootingDate">촬영일</label>
+          <input type="date" id="shootingDate" class="field-input">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="startTime">시작 시간</label>
+          <input type="time" id="startTime" class="field-input" value="10:00">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="location">장소</label>
+          <input type="text" id="location" class="field-input" placeholder="촬영 장소">
+        </div>
+        <input type="hidden" id="manager" value="">
+        <textarea id="memo" style="display:none"></textarea>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value" id="sumItems">0컷</div>
+          <div class="summary-item-label">컷 수</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sumShootMin">0분</div>
+          <div class="summary-item-label">촬영</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sumBufferMin">0분</div>
+          <div class="summary-item-label">버퍼</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value" id="sumTotalMin">0분</div>
+          <div class="summary-item-label">총 시간</div>
+        </div>
+        <div class="end-time-block-inner">
+          <div class="end-time-value" id="sumEndTime">—</div>
+          <div class="end-time-label">예상 종료</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 통합 툴바 — 버퍼 설정 + 액션 버튼 한 줄 -->
+  <div class="toolbar-bar">
+    <!-- 행 추가 그룹 -->
+    <button class="btn btn-primary"   onclick="addRow()">＋ 새 행 추가</button>
+    <button class="btn btn-break"     onclick="addBreakRow()">☕ 휴식</button>
+    <button class="btn btn-lunch"     onclick="addLunchRow()">🍱 점심</button>
+
+    <div class="toolbar-sep"></div>
+
+    <!-- Undo -->
+    <button class="btn btn-undo" id="undoBtn" onclick="undo()" disabled title="실행 취소 (최근 20단계)">↩ 실행취소</button>
+
+    <div class="toolbar-sep"></div>
+
+    <!-- 버퍼 설정 -->
+    <label class="toolbar-label" for="defaultBuffer">기본 버퍼</label>
+    <input type="number" id="defaultBuffer" class="toolbar-num" value="10" min="0" max="999">
+    <span class="toolbar-label">분</span>
+    <label class="toggle-label">
+      <input type="checkbox" id="autoBuffer">
+      자동 적용
+    </label>
+
+    <div class="toolbar-sep"></div>
+
+    <!-- 저장/불러오기 -->
+    <button class="btn btn-secondary" onclick="openFileModal()">💾 저장 / 불러오기</button>
+
+    <div class="toolbar-sep"></div>
+
+    <!-- 내보내기 -->
+    <button class="btn btn-secondary" onclick="exportCSV()">CSV</button>
+    <button class="btn btn-secondary" onclick="shareURL()">🔗 링크 공유</button>
+    <button class="btn btn-secondary" onclick="printTable()">인쇄</button>
+
+    <!-- 초기화 — 오른쪽 끝 -->
+    <div class="toolbar-spacer"></div>
+    <button class="btn btn-danger" onclick="resetAll()">전체 초기화</button>
+  </div>
+
+  <!-- 초과 시간 경고 배너 -->
+  <div class="overtime-warn" id="overtimeWarn">
+    ⚠️ 총 촬영 시간이 <span id="overtimeTotal"></span>으로 10시간을 초과했습니다.
+  </div>
+
+  <!-- 일괄 수정 바 -->
+  <div class="bulk-bar" id="bulkBar">
+    <span class="bulk-bar-label" id="bulkCount">0개 선택됨</span>
+    <div class="bulk-sep"></div>
+    <label class="bulk-field-label">카테고리</label>
+    <select class="bulk-select" id="bulkCategory">
+      <option value="">변경 안 함</option>
+      <option value="사진">사진</option>
+      <option value="영상">영상</option>
+    </select>
+    <div class="bulk-sep"></div>
+    <label class="bulk-field-label">중요도</label>
+    <select class="bulk-select" id="bulkImportance">
+      <option value="">변경 안 함</option>
+      <option value="높음">높음</option>
+      <option value="보통">보통</option>
+      <option value="낮음">낮음</option>
+    </select>
+    <div class="bulk-sep"></div>
+    <label class="bulk-field-label">세트/장소</label>
+    <input type="text" class="bulk-select" id="bulkSet" placeholder="입력 (비우면 변경 안 함)" style="width:120px">
+    <div class="bulk-sep"></div>
+    <label class="bulk-field-label">소요(분)</label>
+    <input type="number" class="bulk-select" id="bulkDuration" placeholder="—" min="0" max="9999" style="width:64px;text-align:center">
+    <div class="bulk-sep"></div>
+    <label class="bulk-field-label">버퍼(분)</label>
+    <input type="number" class="bulk-select" id="bulkBuffer" placeholder="—" min="0" max="9999" style="width:64px;text-align:center">
+    <div class="bulk-sep"></div>
+    <button class="bulk-btn apply"   onclick="applyBulkEdit()">✓ 일괄 적용</button>
+    <button class="bulk-btn del-sel" onclick="deleteSelected()">✕ 선택 삭제</button>
+    <button class="bulk-btn cancel"  onclick="clearSelection()">선택 해제</button>
+  </div>
+
+  <!-- 진행률 바 -->
+  <div class="progress-bar-wrap">
+    <span class="progress-label" id="progressLabel">0 / 0 완료</span>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+    <span class="progress-label" id="progressPercent">0%</span>
+  </div>
+
+  <!-- 타임테이블
+       열 순서 (총 15개):
+       0:drag  1:select  2:#  3:카테고리  4:항목명  5:중요도
+       6:소요  7:버퍼  8:시작  9:종료  10:세트  11:비고
+       12:이미지  13:조작  14:촬영완료
+  -->
+  <div class="table-wrapper">
+    <table id="timetable">
+      <thead>
+        <tr>
+          <th class="th-drag"  style="width:20px"></th>
+          <th class="center td-select" style="width:28px" title="전체 선택">
+            <input type="checkbox" id="selectAllCb" class="row-select-cb"
+              onchange="toggleSelectAll(this.checked)" title="전체 선택/해제">
+          </th>
+          <th class="center"   style="width:28px">#</th>
+          <th                  style="width:78px">카테고리</th>
+          <th                  style="min-width:130px">촬영 항목명</th>
+          <th class="center"   style="width:88px">중요도</th>
+          <th class="center"   style="width:56px">소요(분)</th>
+          <th class="center"   style="width:56px">버퍼(분)</th>
+          <th class="center"   style="width:52px">컷 수</th>
+          <th class="center th-time-group" style="width:50px">시작</th>
+          <th class="center th-time-group" style="width:50px">종료</th>
+          <th                  style="min-width:150px">세트/장소</th>
+          <th                  style="min-width:100px">비고</th>
+          <th class="center"   style="width:68px">이미지</th>
+          <th class="center th-actions" style="width:82px">조작</th>
+          <th class="center"   style="width:58px">촬영완료</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div><!-- /app-wrapper -->
+
+<!-- 라이트박스 -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+</div>
+
+<!-- 저장 / 불러오기 통합 모달 -->
+<div class="modal-overlay" id="fileModal">
+  <div class="modal-box" style="width:480px;">
+    <div class="modal-title">💾 저장 / 불러오기</div>
+
+    <!-- 저장 섹션 -->
+    <div class="file-modal-section">
+      <div class="file-modal-section-label">현재 타임테이블 저장</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="templateNameInput" class="modal-input"
+          placeholder="이름 입력 (예: 봄 시즌 화보)"
+          style="margin-bottom:0;flex:1;">
+        <button class="btn btn-primary" onclick="saveTemplate()" style="flex-shrink:0;">저장</button>
+      </div>
+      <p style="font-size:11px;color:var(--color-text-muted);margin-top:6px;">
+        텍스트·시간 데이터만 저장됩니다. 브라우저를 닫아도 유지됩니다.
+      </p>
+    </div>
+
+    <div class="file-modal-divider"></div>
+
+    <!-- 파일 백업 섹션 -->
+    <div class="file-modal-section">
+      <div class="file-modal-section-label">파일 백업 / 복원</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="exportFile()" style="flex:1;">
+          ⬇ 파일로 내보내기
+        </button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()" style="flex:1;">
+          ⬆ 파일에서 불러오기
+        </button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none">
+      </div>
+      <p style="font-size:11px;color:var(--color-text-muted);margin-top:6px;">
+        .json 파일로 저장해 브라우저가 바뀌거나 캐시가 초기화돼도 복구할 수 있습니다.
+      </p>
+    </div>
+
+    <div class="file-modal-divider"></div>
+
+    <!-- 불러오기 섹션 -->
+    <div class="file-modal-section">
+      <div class="file-modal-section-label">저장된 타임테이블</div>
+      <ul class="template-list" id="templateList"></ul>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('fileModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- URL 공유 모달 -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box" style="width:500px;">
+    <div class="modal-title">🔗 링크 공유</div>
+    <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">
+      아래 링크를 복사해 팀원에게 공유하세요.<br>
+      링크를 열면 현재 타임테이블을 <strong>읽기 전용</strong>으로 볼 수 있습니다.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="shareUrlInput" class="modal-input"
+        style="margin-bottom:0;flex:1;font-family:var(--font-mono);font-size:11px;"
+        readonly>
+      <button class="btn btn-primary" onclick="copyShareURL()" style="flex-shrink:0;">복사</button>
+    </div>
+    <p id="shareCopyMsg" style="font-size:11px;color:#27ae60;margin-top:6px;display:none;">✓ 클립보드에 복사됐습니다.</p>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal('shareModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   데이터 구조
+   rows 배열 — 각 row 객체:
+   { id, category, title, importance, duration, buffer,
+     set, note, done, imageData(런타임만/저장제외),
+     startTime, endTime(계산값/저장제외) }
+   ============================================================ */
+let rows = [];
+
+const CATEGORIES  = ['사진', '영상', '휴식', '점심'];
+const IMPORTANCES = ['높음', '보통', '낮음'];
+const IMP_CLASS   = { '높음': 'imp-high', '보통': 'imp-mid', '낮음': 'imp-low' };
+
+let dragSrcId   = null;
+let selectedIds = new Set();
+
+/* ============================================================
+   유틸리티 — 공통
+   ============================================================ */
+
+/** "HH:MM" → 분(정수) */
+function timeToMinutes(str) {
+  if (!str) return 0;
+  const [h, m] = str.split(':').map(Number);
+  return (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+}
+
+/** 분(정수) → "HH:MM" */
+function minutesToTime(min) {
+  if (isNaN(min)) return '—';
+  return String(Math.floor(min / 60) % 24).padStart(2,'0') + ':' + String(min % 60).padStart(2,'0');
+}
+
+/** 분 → "X시간 Y분" 한국어 표기 (fix #8) */
+function formatMin(min) {
+  if (!min && min !== 0) return '0분';
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h === 0) return `${m}분`;
+  if (m === 0) return `${h}시간`;
+  return `${h}시간 ${m}분`;
+}
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function csvEsc(val) {
+  const s = String(val || '');
+  return (s.includes(',') || s.includes('"') || s.includes('\n'))
+    ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function setAutosaveStatus(msg) {
+  document.getElementById('autosaveStatus').textContent = msg;
+}
+
+/** 현재 시각 "HH:MM" */
+function nowTimeStr() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+
+/** 로컬 날짜 "YYYY-MM-DD" — UTC 오프셋 버그 수정 (fix #5) */
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2,'0') + '-'
+    + String(d.getDate()).padStart(2,'0');
+}
+
+/** 로컬 날짜+시간 "YYYY-MM-DD HH:MM" (fix #5) */
+function nowDateStr() {
+  return localDateStr() + ' ' + nowTimeStr();
+}
+
+/* ============================================================
+   Undo 히스토리 스택 (최대 20단계)
+   saveHistory()를 행 변경 직전에 호출해 스냅샷 저장
+   ============================================================ */
+let historyStack = [];
+
+function saveHistory() {
+  historyStack.push(JSON.stringify(rows));
+  if (historyStack.length > 20) historyStack.shift();
+  // Undo 버튼 활성화
+  const btn = document.getElementById('undoBtn');
+  if (btn) btn.disabled = false;
+}
+
+function undo() {
+  if (!historyStack.length) return;
+  rows = JSON.parse(historyStack.pop());
+  renderTable();
+  saveCurrentState();
+  // 스택 비었으면 버튼 비활성
+  const btn = document.getElementById('undoBtn');
+  if (btn) btn.disabled = historyStack.length === 0;
+  setAutosaveStatus('실행 취소됨');
+}
+
+/* ============================================================
+   adjustDuration — +5/-5 버튼 핸들러
+   ============================================================ */
+function adjustDuration(id, delta) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  saveHistory();
+  row.duration = Math.max(0, (row.duration || 0) + delta);
+  // 해당 행 숫자 인풋 즉시 갱신 (fast path)
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    const inp = tr.querySelector('.td-duration .num-input');
+    if (inp) inp.value = row.duration;
+  }
+  recalculateTimes();
+  updateSummary();
+  checkOvertime();
+  debouncedSave();
+}
+
+/* ============================================================
+   adjustBuffer — +5/-5 버튼 핸들러
+   ============================================================ */
+function adjustBuffer(id, delta) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  saveHistory();
+  row.buffer = Math.max(0, (row.buffer || 0) + delta);
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    const inp = tr.querySelector('.buf-input');
+    if (inp) inp.value = row.buffer;
+  }
+  recalculateTimes();
+  updateSummary();
+  checkOvertime();
+  debouncedSave();
+}
+
+/* ============================================================
+   checkOvertime — 10시간(600분) 초과 시 경고 배너
+   ============================================================ */
+function checkOvertime() {
+  const total = rows.reduce((s, r) => s + (r.duration || 0) + (r.buffer || 0), 0);
+  const warn  = document.getElementById('overtimeWarn');
+  const span  = document.getElementById('overtimeTotal');
+  if (!warn) return;
+  if (total > 600) {
+    if (span) span.textContent = formatMin(total);
+    warn.classList.add('visible');
+  } else {
+    warn.classList.remove('visible');
+  }
+}
+
+/* ============================================================
+   updateTimeOnly — duration/buffer 변경 시 부분 업데이트 (성능)
+   전체 renderTable 대신 시간 계산 + 요약만 갱신
+   ============================================================ */
+function updateTimeOnly() {
+  recalculateTimes();
+  updateTimeDisplay();
+  updateSummary();
+  checkOvertime();
+}
+
+/* ============================================================
+   자동 저장 — 10초 인터벌
+   입력 중 즉각 반응은 debounce(400ms)로 유지하되
+   정기 백업은 10초마다 실행
+   ============================================================ */
+let _saveTimer = null;
+function debouncedSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => saveCurrentState(), 400);
+}
+// 10초 정기 자동 저장
+setInterval(() => {
+  if (rows.length > 0) saveCurrentState();
+}, 10000);
+
+/* ============================================================
+   파일 내보내기 / 불러오기 (JSON 파일)
+   브라우저 교체·캐시 초기화 후에도 복구 가능
+   ============================================================ */
+function exportFile() {
+  const proj = document.getElementById('projectName').value || '무제';
+  const date = document.getElementById('shootingDate').value || localDateStr();
+  const data = {
+    version:    2,
+    exportedAt: nowDateStr(),
+    project: {
+      name:      document.getElementById('projectName').value,
+      date:      date,
+      startTime: document.getElementById('startTime').value,
+      location:  document.getElementById('location').value,
+      memo:      document.getElementById('memo').value || ''
+    },
+    defaultBuffer: parseInt(document.getElementById('defaultBuffer').value) || 0,
+    autoBuffer:    document.getElementById('autoBuffer').checked,
+    rows: serializeRows(false)  // 이미지 제외 (용량)
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {
+    href:     url,
+    download: `촬영타임테이블_${proj}_${date}.json`
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // 다운로드 시작 후 충분히 기다린 뒤 해제 (안정성 확보)
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+function importFileSetup() {
+  const input = document.getElementById('importFileInput');
+  if (!input) return;
+  input.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.rows) { alert('올바른 타임테이블 파일이 아닙니다.'); return; }
+        if (!confirm('현재 데이터가 파일 내용으로 대체됩니다. 계속하시겠습니까?')) return;
+
+        const p = data.project || {};
+        document.getElementById('projectName').value  = p.name      || '';
+        document.getElementById('shootingDate').value = p.date      || '';
+        document.getElementById('startTime').value    = p.startTime || '10:00';
+        document.getElementById('location').value     = p.location  || '';
+        document.getElementById('memo').value         = p.memo      || '';
+        if (data.defaultBuffer !== undefined)
+          document.getElementById('defaultBuffer').value = data.defaultBuffer;
+        if (data.autoBuffer !== undefined)
+          document.getElementById('autoBuffer').checked = data.autoBuffer;
+
+        rows = (data.rows || []).map(r =>
+          Object.assign(createRow(), r, { id: Date.now() + Math.random() })
+        );
+        resetSelection();
+        renderTable();
+        saveCurrentState();
+        setAutosaveStatus('파일에서 복원됨 — ' + nowTimeStr());
+        closeModal('fileModal');
+      } catch(err) {
+        alert('파일을 읽는 중 오류가 발생했습니다.\n' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';  // 같은 파일 재선택 가능
+  });
+}
+
+/* ============================================================
+   URL 공유 & 읽기 전용 뷰
+   데이터를 JSON → gzip 없이 base64 인코딩해 hash에 담음.
+   ?view=1 파라미터로 읽기 전용 활성화.
+   ============================================================ */
+
+/** 현재 타임테이블을 URL hash로 인코딩 */
+function encodeStateToHash() {
+  const state = {
+    project: {
+      name:      document.getElementById('projectName').value,
+      date:      document.getElementById('shootingDate').value,
+      startTime: document.getElementById('startTime').value,
+      location:  document.getElementById('location').value,
+    },
+    defaultBuffer: parseInt(document.getElementById('defaultBuffer').value) || 0,
+    autoBuffer:    document.getElementById('autoBuffer').checked,
+    rows: serializeRows(false)
+  };
+  try {
+    return btoa(encodeURIComponent(JSON.stringify(state)));
+  } catch(e) {
+    return null;
+  }
+}
+
+/** URL hash를 디코딩해 상태 복원 */
+function decodeHashToState(hash) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(hash)));
+  } catch(e) {
+    return null;
+  }
+}
+
+/** 공유 링크 생성 후 모달 표시 — URL 길이 초과 대응 */
+function shareURL() {
+  const hash = encodeStateToHash();
+  if (!hash) {
+    alert('데이터를 인코딩하는 중 오류가 발생했습니다.\n파일 내보내기를 이용해주세요.');
+    return;
+  }
+  const url = location.href.split('?')[0].split('#')[0] + '?view=1#' + hash;
+  // 브라우저/서버마다 URL 길이 제한이 다름. 8000자 이상이면 파일 안내
+  if (url.length > 8000) {
+    const ok = confirm(
+      `공유 링크가 너무 깁니다 (${url.length.toLocaleString()}자).\n`
+      + '항목 수를 줄이거나 파일 내보내기를 이용하시겠습니까?\n\n'
+      + '확인 → 파일 내보내기  /  취소 → 현재 링크 그대로 사용'
+    );
+    if (ok) { exportFile(); return; }
+  }
+  document.getElementById('shareUrlInput').value = url;
+  document.getElementById('shareCopyMsg').style.display = 'none';
+  openModal('shareModal');
+}
+
+/** URL 클립보드 복사 — .catch() 기반 fallback */
+function copyShareURL() {
+  const input  = document.getElementById('shareUrlInput');
+  const msgEl  = document.getElementById('shareCopyMsg');
+  const url    = input.value;
+
+  const showMsg = (ok) => {
+    msgEl.textContent = ok ? '✓ 클립보드에 복사됐습니다.' : '⚠ 복사에 실패했습니다. 직접 선택 후 복사해주세요.';
+    msgEl.style.color   = ok ? '#27ae60' : '#e74c3c';
+    msgEl.style.display = 'block';
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showMsg(true))
+      .catch(() => {
+        // clipboard API 실패 → execCommand fallback
+        input.select();
+        const ok = document.execCommand('copy');
+        showMsg(ok);
+      });
+  } else {
+    // clipboard API 미지원 환경
+    input.select();
+    const ok = document.execCommand('copy');
+    showMsg(ok);
+  }
+}
+
+/** 읽기 전용 모드 활성화 */
+function activateViewMode() {
+  document.body.classList.add('view-mode');
+  // 날짜/시간 input을 텍스트로 교체 표시
+  ['shootingDate','startTime'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    const span = document.createElement('span');
+    span.className = id === 'shootingDate' ? 'date-display' : 'time-display';
+    span.textContent = val || '—';
+    el.parentNode.style.position = 'relative';
+    el.parentNode.appendChild(span);
+  });
+  // 편집 관련 이벤트 차단
+  document.getElementById('timetable').addEventListener('click', e => {
+    if (e.target.closest('.cell-input, .done-checkbox, .row-btn, .dur-btn')) {
+      e.preventDefault(); e.stopPropagation();
+    }
+  }, true);
+}
+
+/* ============================================================
+   선택 & 일괄 수정
+   ============================================================ */
+
+/** 선택 상태 완전 초기화 — 공통 유틸 (fix #2) */
+function resetSelection() {
+  selectedIds.clear();
+  const allCb = document.getElementById('selectAllCb');
+  if (allCb) allCb.checked = false;
+  updateBulkBar();
+}
+
+function toggleRowSelect(id, checked) {
+  if (checked) selectedIds.add(id);
+  else         selectedIds.delete(id);
+  updateBulkBar();
+  const allCb = document.getElementById('selectAllCb');
+  if (allCb) allCb.checked = rows.length > 0 && selectedIds.size === rows.length;
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) tr.classList.toggle('row-selected', checked);
+}
+
+function toggleSelectAll(checked) {
+  if (checked) rows.forEach(r => selectedIds.add(r.id));
+  else         selectedIds.clear();
+  updateBulkBar();
+  renderTable();
+}
+
+function clearSelection() {
+  resetSelection();
+  renderTable();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  if (!bar) return;
+  const cnt = selectedIds.size;
+  if (cnt > 0) {
+    bar.classList.add('visible');
+    document.getElementById('bulkCount').textContent = `${cnt}개 선택됨`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function applyBulkEdit() {
+  if (!selectedIds.size) return;
+  if (!confirm(`선택한 ${selectedIds.size}개 항목에 일괄 적용하시겠습니까?`)) return;
+  saveHistory();
+  const cat  = document.getElementById('bulkCategory').value;
+  const imp  = document.getElementById('bulkImportance').value;
+  const set  = document.getElementById('bulkSet').value;
+  const durV = document.getElementById('bulkDuration').value.trim();
+  const bufV = document.getElementById('bulkBuffer').value.trim();
+  const dur  = durV !== '' ? Math.max(0, parseInt(durV) || 0) : null;
+  const buf  = bufV !== '' ? Math.max(0, parseInt(bufV) || 0) : null;
+
+  let changed = false;
+  rows.forEach(r => {
+    if (!selectedIds.has(r.id)) return;
+    if (cat)        { r.category   = cat; changed = true; }
+    if (imp)        { r.importance = imp; changed = true; }
+    if (set)        { r.set        = set; changed = true; }
+    if (dur !== null){ r.duration  = dur; changed = true; }
+    if (buf !== null){ r.buffer    = buf; changed = true; }
+  });
+  if (!changed) { alert('변경할 값을 하나 이상 선택해주세요.'); return; }
+
+  ['bulkCategory','bulkImportance','bulkSet'].forEach(id => { document.getElementById(id).value = ''; });
+  ['bulkDuration','bulkBuffer'].forEach(id => { document.getElementById(id).value = ''; });
+  renderTable();
+  saveCurrentState();
+}
+
+function deleteSelected() {
+  if (!selectedIds.size) return;
+  if (!confirm(`선택한 ${selectedIds.size}개 항목을 삭제하시겠습니까?`)) return;
+  rows = rows.filter(r => !selectedIds.has(r.id));
+  resetSelection();
+  renderTable();
+  saveCurrentState();
+}
+
+/* ============================================================
+   행 CRUD
+   ============================================================ */
+
+function createRow(overrides = {}) {
+  const autoBuffer = document.getElementById('autoBuffer').checked;
+  const defBuffer  = parseInt(document.getElementById('defaultBuffer').value) || 0;
+  return Object.assign({
+    id:        Date.now() + Math.random(),
+    category:  '사진',
+    title:     '',
+    importance:'보통',
+    duration:  30,
+    buffer:    autoBuffer ? defBuffer : 0,
+    cuts:      0,
+    set:       '',
+    note:      '',
+    done:      false,
+    imageData: ''
+  }, overrides);
+}
+
+function addRow() {
+  saveHistory();
+  rows.push(createRow());
+  renderTable();
+  debouncedSave();
+  const inputs = document.querySelectorAll('.title-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+/* ============================================================
+   insertSpecialRow — 내부 공통 함수
+   선택된 행이 있으면 마지막 선택 행 바로 아래에 삽입,
+   없으면 테이블 맨 아래에 추가.
+   삽입 후 해당 행을 부드럽게 강조해서 위치를 알려줌.
+   ============================================================ */
+function insertSpecialRow(overrides) {
+  saveHistory();
+  const newRow = createRow(overrides);
+
+  if (selectedIds.size > 0) {
+    // 선택된 행 중 rows 배열에서 가장 마지막 인덱스 찾기
+    let lastIdx = -1;
+    rows.forEach((r, i) => {
+      if (selectedIds.has(r.id)) lastIdx = i;
+    });
+    if (lastIdx >= 0) {
+      rows.splice(lastIdx + 1, 0, newRow);
+    } else {
+      rows.push(newRow);
+    }
+  } else {
+    // 선택 없으면 맨 아래
+    rows.push(newRow);
+  }
+
+  renderTable();
+  saveCurrentState();
+
+  // 삽입된 행을 잠깐 강조해서 어디 들어갔는지 시각 피드백
+  requestAnimationFrame(() => {
+    const tr = document.querySelector(`tr[data-id="${newRow.id}"]`);
+    if (tr) {
+      tr.style.transition = 'background .1s';
+      tr.style.background = '#ffe89a';
+      setTimeout(() => { tr.style.background = ''; }, 800);
+      tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+}
+
+function addBreakRow() {
+  insertSpecialRow({
+    category:   '휴식',
+    title:      '휴식',
+    importance: '낮음',
+    duration:   10,
+    buffer:     0,
+    set:        '',
+    note:       ''
+  });
+}
+
+function addLunchRow() {
+  insertSpecialRow({
+    category:   '점심',
+    title:      '점심',
+    importance: '낮음',
+    duration:   60,
+    buffer:     0,
+    set:        '',
+    note:       ''
+  });
+}
+
+/** deleteRow — selectedIds에서도 제거 (fix #2) */
+function deleteRow(id) {
+  saveHistory();
+  rows = rows.filter(r => r.id !== id);
+  selectedIds.delete(id);
+  updateBulkBar();
+  renderTable();
+  saveCurrentState();
+}
+
+/** cloneRow — 이미지 제외 복제, 선택 유지 (fix #2) */
+function cloneRow(id) {
+  saveHistory();
+  const idx = rows.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  const cloned = Object.assign({}, rows[idx], {
+    id:        Date.now() + Math.random(),
+    done:      false,
+    imageData: ''      // 복제 시 이미지 제외
+  });
+  rows.splice(idx + 1, 0, cloned);
+  renderTable();
+  saveCurrentState();
+}
+
+function moveRow(id, dir) {
+  const idx = rows.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  if (dir === 'up'   && idx === 0) return;
+  if (dir === 'down' && idx === rows.length - 1) return;
+  const swap = dir === 'up' ? idx - 1 : idx + 1;
+  [rows[idx], rows[swap]] = [rows[swap], rows[idx]];
+  renderTable();
+  saveCurrentState();
+}
+
+/** toggleDone — 체크박스 + 인쇄 마크 동시 갱신 (fix #3) */
+function toggleDone(id, checked) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  row.done = checked;
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    tr.classList.toggle('row-done', checked);
+    // 인쇄용 마크 즉시 갱신
+    const mark = tr.querySelector('.done-print-mark');
+    if (mark) mark.textContent = checked ? '✓' : '';
+  }
+  updateProgressBar();
+  debouncedSave();
+}
+
+/** previewNumCell — 입력 중 시간 계산만 갱신 (row 값 미확정) */
+function previewNumCell(id, field, rawValue) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  // 빈 값이면 계산만 건너뜀 (커서 깨짐 방지)
+  if (rawValue === '' || rawValue === '-') return;
+  const n = parseInt(rawValue);
+  if (!isNaN(n) && n >= 0) {
+    row[field] = n;
+    updateTimeOnly();
+  }
+}
+
+/** commitNumCell — blur 시 값 확정 및 저장 */
+function commitNumCell(id, field, rawValue) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  const n = parseInt(rawValue);
+  row[field] = (isNaN(n) || n < 0) ? 0 : n;
+  // 확정된 값으로 인풋 표시 동기화
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    const inputs = tr.querySelectorAll('.num-input');
+    inputs.forEach(inp => {
+      if (field === 'duration' && inp.closest('.td-duration')) inp.value = row.duration;
+      if (field === 'buffer'   && inp.closest('.td-buf'))      inp.value = row.buffer;
+      if (field === 'cuts'     && inp.closest('.td-cuts'))     inp.value = row.cuts;
+    });
+  }
+  updateTimeOnly();
+  debouncedSave();
+}
+
+function updateCell(id, field, value) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  if (field === 'category') {
+    saveHistory();
+    row[field] = value;
+    renderTable();
+    debouncedSave();
+  } else if (field === 'importance') {
+    row[field] = value;
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (tr) {
+      const sel = tr.querySelector('td.center select.cell-input');
+      if (sel) {
+        sel.classList.remove('imp-high','imp-mid','imp-low');
+        sel.classList.add(IMP_CLASS[value]);
+      }
+    }
+    debouncedSave();
+  } else {
+    row[field] = value;
+    debouncedSave();
+  }
+}
+
+/* ============================================================
+   이미지 처리 — canvas 리사이즈 + drag & drop 지원
+   최대 400×400으로 축소해 base64 메모리 부담 절감
+   ============================================================ */
+const IMG_MAX_SIZE = 400;  // 최대 가로/세로 px
+const IMG_QUALITY  = 0.75; // JPEG 압축 품질
+
+/** File 객체 → canvas 리사이즈 → base64 반환 (Promise) */
+function resizeImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ev => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > IMG_MAX_SIZE || height > IMG_MAX_SIZE) {
+          const ratio = Math.min(IMG_MAX_SIZE / width, IMG_MAX_SIZE / height);
+          width  = Math.round(width  * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', IMG_QUALITY));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleImageUpload(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('이미지 파일만 첨부 가능합니다.'); return; }
+  resizeImageFile(file).then(dataUrl => {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+    row.imageData = dataUrl;
+    renderTable();
+    saveCurrentState();
+  }).catch(() => alert('이미지를 처리하는 중 오류가 발생했습니다.'));
+}
+
+/** 이미지 셀에 drag & drop 이벤트 연결 */
+function setupImageDropZone(el, id) {
+  el.addEventListener('dragover', e => { e.preventDefault(); el.style.borderColor = 'var(--color-primary)'; });
+  el.addEventListener('dragleave', () => { el.style.borderColor = ''; });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    resizeImageFile(file).then(dataUrl => {
+      const row = rows.find(r => r.id === id);
+      if (!row) return;
+      row.imageData = dataUrl;
+      renderTable();
+      saveCurrentState();
+    }).catch(() => alert('이미지를 처리하는 중 오류가 발생했습니다.'));
+  });
+}
+
+function removeImage(id) {
+  const row = rows.find(r => r.id === id);
+  if (!row) return;
+  row.imageData = '';
+  renderTable();
+  saveCurrentState();
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxOverlay').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightboxOverlay').classList.remove('open');
+}
+
+/* ============================================================
+   드래그앤드롭 — 핸들에서만 시작 (fix #6)
+   ============================================================ */
+function onDragStart(e, id) {
+  dragSrcId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(id));
+  e.currentTarget.closest('tr').classList.add('dragging');
+}
+function onDragEnd(e) {
+  document.querySelectorAll('tr.dragging, tr.drag-over').forEach(el => {
+    el.classList.remove('dragging','drag-over');
+  });
+}
+function onDragOver(e, id) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('tr.drag-over').forEach(el => el.classList.remove('drag-over'));
+  const tr = e.currentTarget.closest('tr');
+  if (tr && dragSrcId !== id) tr.classList.add('drag-over');
+}
+function onDrop(e, targetId) {
+  e.preventDefault();
+  if (dragSrcId === null || dragSrcId === targetId) return;
+  const si = rows.findIndex(r => r.id === dragSrcId);
+  const ti = rows.findIndex(r => r.id === targetId);
+  if (si < 0 || ti < 0) return;
+  const [moved] = rows.splice(si, 1);
+  rows.splice(ti, 0, moved);
+  dragSrcId = null;
+  renderTable();
+  saveCurrentState();
+}
+
+/* ============================================================
+   시간 계산
+   ============================================================ */
+function recalculateTimes() {
+  const baseStr = document.getElementById('startTime').value;
+  if (!baseStr) { rows.forEach(r => { r.startTime = ''; r.endTime = ''; }); updateTimeDisplay(); return; }
+  let cursor = timeToMinutes(baseStr);
+  rows.forEach(row => {
+    row.startTime = minutesToTime(cursor);
+    row.endTime   = minutesToTime(cursor + (row.duration || 0) + (row.buffer || 0));
+    cursor       += (row.duration || 0) + (row.buffer || 0);
+  });
+  updateTimeDisplay();
+}
+
+function updateTimeDisplay() {
+  rows.forEach(row => {
+    const s = document.getElementById(`start_${row.id}`);
+    const e = document.getElementById(`end_${row.id}`);
+    if (s) s.textContent = row.startTime || '—';
+    if (e) e.textContent = row.endTime   || '—';
+  });
+}
+
+function updateSummary() {
+  const shoot  = rows.reduce((s, r) => s + (r.duration || 0), 0);
+  const buffer = rows.reduce((s, r) => s + (r.buffer   || 0), 0);
+  const all    = shoot + buffer;
+  document.getElementById('sumItems').textContent     = rows.reduce((s,r)=>s+(r.cuts||0),0) + '컷';
+  document.getElementById('sumShootMin').textContent  = formatMin(shoot);
+  document.getElementById('sumBufferMin').textContent = formatMin(buffer);
+  document.getElementById('sumTotalMin').textContent  = formatMin(all);
+  const base = document.getElementById('startTime').value;
+  document.getElementById('sumEndTime').textContent   =
+    (base && rows.length) ? minutesToTime(timeToMinutes(base) + all) : '—';
+}
+
+function updateProgressBar() {
+  const total = rows.length;
+  const done  = rows.filter(r => r.done).length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressLabel').textContent   = `${done} / ${total} 완료`;
+  document.getElementById('progressPercent').textContent = `${pct}%`;
+  document.getElementById('progressBarFill').style.width = pct + '%';
+}
+
+/* ============================================================
+   renderTable
+   ============================================================ */
+function renderTable() {
+  recalculateTimes();
+  updateSummary();
+  updateProgressBar();
+  checkOvertime();
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  if (!rows.length) {
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    tr.innerHTML = `<td colspan="15">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+        <span style="font-size:32px;">📋</span>
+        <span>촬영 항목이 없습니다.</span>
+        <span style="font-size:12px;color:var(--color-text-muted)">
+        <span style="font-size:12px;color:var(--color-text-muted)">
+          <kbd style="background:#f0f2f5;border:1px solid #d8dadf;border-radius:4px;padding:2px 6px;font-family:var(--font-mono);">＋ 새 행 추가</kbd> 버튼을 눌러 시작하세요.
+        </span>
+        </span>
+      </div>
+    </td>`;
+    tbody.appendChild(tr);
+    syncSelectAllCb();
+    return;
+  }
+
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = row.id;
+    const selClass  = selectedIds.has(row.id) ? ' row-selected' : '';
+    const doneClass = row.done ? ' row-done' : '';
+    tr.className    = `cat-${row.category}${doneClass}${selClass}`;
+    // 드래그는 핸들에서만 — tr.draggable 제거, 핸들에서만 dragstart (fix #6)
+    tr.addEventListener('dragover', e => onDragOver(e, row.id));
+    tr.addEventListener('drop',     e => onDrop(e, row.id));
+
+    const imgHtml = row.imageData
+      ? `<div class="img-thumb-wrap">
+           <img class="img-thumb" src="${row.imageData}" alt="첨부" onclick="openLightbox('${row.imageData}')">
+           <button class="img-remove-btn" onclick="removeImage(${row.id})" title="삭제">×</button>
+         </div>`
+      : `<label class="img-upload-btn img-drop-zone" data-id="${row.id}" title="클릭하거나 이미지를 드래그해서 첨부">+
+           <input type="file" class="img-file-input" accept="image/*"
+             onchange="handleImageUpload(${row.id}, this)">
+         </label>`;
+
+    tr.innerHTML = `
+      <td class="td-drag" title="드래그하여 순서 변경">
+        <span class="drag-handle">⠿</span>
+      </td>
+      <td class="td-select">
+        <input type="checkbox" class="row-select-cb" ${selectedIds.has(row.id) ? 'checked' : ''}
+          onchange="toggleRowSelect(${row.id}, this.checked)" title="선택">
+      </td>
+      <td class="td-seq">${idx + 1}</td>
+      <td class="td-category">
+        <select class="cell-input" onchange="updateCell(${row.id},'category',this.value)">
+          ${CATEGORIES.map(c => `<option value="${c}" ${c===row.category?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="text" class="cell-input title-input" value="${escHtml(row.title)}"
+          placeholder="항목명 입력"
+          oninput="updateCell(${row.id},'title',this.value)">
+      </td>
+      <td class="center">
+        <select class="cell-input ${IMP_CLASS[row.importance]}"
+          onchange="updateCell(${row.id},'importance',this.value)">
+          ${IMPORTANCES.map(i => `<option value="${i}" ${i===row.importance?'selected':''}>${i}</option>`).join('')}
+        </select>
+      </td>
+      <td class="td-num td-duration">
+        <div class="dur-wrap">
+          <button class="dur-btn" onclick="adjustDuration(${row.id},-5)" title="-5분">−</button>
+          <input type="text" inputmode="numeric" class="cell-input num-input" value="${row.duration}"
+            oninput="previewNumCell(${row.id},'duration',this.value)"
+            onblur="commitNumCell(${row.id},'duration',this.value)">
+          <button class="dur-btn" onclick="adjustDuration(${row.id},5)" title="+5분">＋</button>
+        </div>
+      </td>
+      <td class="td-num td-buf">
+        <div class="dur-wrap">
+          <button class="dur-btn" onclick="adjustBuffer(${row.id},-5)" title="-5분">−</button>
+          <input type="text" inputmode="numeric" class="cell-input num-input buf-input" value="${row.buffer}"
+            oninput="previewNumCell(${row.id},'buffer',this.value)"
+            onblur="commitNumCell(${row.id},'buffer',this.value)">
+          <button class="dur-btn" onclick="adjustBuffer(${row.id},5)" title="+5분">＋</button>
+        </div>
+      </td>
+      <td class="td-num td-cuts">
+        <input type="text" inputmode="numeric" class="cell-input num-input cuts-input" value="${row.cuts ?? 0}"
+          oninput="updateCell(${row.id},'cuts',+this.value||0)"
+          onblur="this.value=+this.value||0">
+      </td>
+      <td class="td-time" id="start_${row.id}">${row.startTime || '—'}</td>
+      <td class="td-time" id="end_${row.id}">${row.endTime   || '—'}</td>
+      <td>
+        <input type="text" class="cell-input" value="${escHtml(row.set)}"
+          placeholder="장소 입력"
+          oninput="updateCell(${row.id},'set',this.value)">
+      </td>
+      <td class="td-note">
+        <input type="text" class="cell-input" value="${escHtml(row.note)}"
+          placeholder="메모"
+          oninput="updateCell(${row.id},'note',this.value)">
+      </td>
+      <td class="td-img">${imgHtml}</td>
+      <td class="td-actions">
+        <button class="row-btn" onclick="moveRow(${row.id},'up')"   title="위로">↑</button>
+        <button class="row-btn" onclick="moveRow(${row.id},'down')" title="아래로">↓</button>
+        <button class="row-btn" onclick="cloneRow(${row.id})"       title="복제">⧉</button>
+        <button class="row-btn del" onclick="deleteRow(${row.id})"  title="삭제">✕</button>
+      </td>
+      <td class="td-done">
+        <input type="checkbox" class="done-checkbox" ${row.done ? 'checked' : ''}
+          onchange="toggleDone(${row.id}, this.checked)" title="촬영완료">
+        <span class="done-print-mark">${row.done ? '✓' : ''}</span>
+      </td>
+    `;
+
+    // 드래그 핸들에만 dragstart/dragend 연결 (fix #6)
+    const handle = tr.querySelector('.td-drag');
+    handle.addEventListener('mousedown', () => { tr.draggable = true; });
+    handle.addEventListener('mouseup',   () => { tr.draggable = false; });
+    tr.addEventListener('dragstart', e => {
+      if (!tr.draggable) { e.preventDefault(); return; }
+      onDragStart(e, row.id);
+    });
+    tr.addEventListener('dragend', e => {
+      tr.draggable = false;
+      onDragEnd(e);
+    });
+
+    tbody.appendChild(tr);
+
+    // 이미지 드롭존 연결
+    const dropZone = tr.querySelector('.img-drop-zone');
+    if (dropZone) setupImageDropZone(dropZone, row.id);
+  });
+
+  // 합계 행 (fix #1 — 열 15개 기준 정확한 colspan)
+  renderFooter(tbody);
+
+  // 전체 선택 체크박스 동기화 (fix #2)
+  syncSelectAllCb();
+}
+
+/** selectAll 체크박스 상태 동기화 */
+function syncSelectAllCb() {
+  const allCb = document.getElementById('selectAllCb');
+  if (!allCb) return;
+  allCb.checked = rows.length > 0 && selectedIds.size === rows.length;
+}
+
+/* ============================================================
+   renderFooter — 열 15개 기준 colspan 정확히 계산 (fix #1)
+   열: 0:drag 1:select 2:# 3:카테고리 4:항목명 5:중요도
+       6:소요  7:버퍼   8:시작 9:종료 10:세트 11:비고
+       12:이미지 13:조작 14:촬영완료
+
+   합계 표시:
+   - 열 0~5 (6칸) → "합계" 라벨
+   - 열 6     (1칸) → 총 소요 분
+   - 열 7     (1칸) → 총 버퍼 분
+   - 열 8~9   (2칸) → 버퍼포함 총 시간
+   - 열 10~14 (5칸) → 빈칸
+   ============================================================ */
+/* ============================================================
+   renderFooter — 합계 행
+   화면: 15개 열 전체
+   인쇄: td-drag / td-select / td-actions 가 숨겨지므로
+         각 td에 클래스를 붙여 인쇄 CSS가 hide 처리
+   ============================================================ */
+function renderFooter(tbody) {
+  const shoot  = rows.reduce((s, r) => s + (r.duration || 0), 0);
+  const buffer = rows.reduce((s, r) => s + (r.buffer   || 0), 0);
+  const tr     = document.createElement('tr');
+  tr.className = 'tbl-footer';
+  tr.innerHTML = `
+    <td class="td-drag footer-hide"></td>
+    <td class="td-select footer-hide"></td>
+    <td class="td-seq" colspan="4" style="font-size:11px;font-family:var(--font-base);font-weight:600;text-align:left;padding-left:8px;">합계</td>
+    <td class="td-num">${shoot}분</td>
+    <td class="td-num">${buffer}분</td>
+    <td class="td-num">${rows.reduce((s,r)=>s+(r.cuts||0),0)}컷</td>
+    <td colspan="2" class="td-time" style="text-align:center;">${formatMin(shoot + buffer)}</td>
+    <td colspan="2"></td>
+    <td class="td-img"></td>
+    <td class="td-actions footer-hide"></td>
+    <td class="td-done"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+/* ============================================================
+   전체 초기화 (fix #2 선택/bulkBar 초기화, fix #10)
+   ============================================================ */
+function resetAll() {
+  if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+  rows = [];
+  ['projectName','shootingDate','location','manager','memo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('startTime').value = '10:00';
+  resetSelection();   // fix #2
+  renderTable();
+  localStorage.removeItem('timetable_current');
+  setAutosaveStatus('초기화됨');
+}
+
+function printTable() {
+  const date = document.getElementById('shootingDate').value || '';
+  const proj = document.getElementById('projectName').value || '촬영 타임테이블';
+  const prev = document.title;
+  document.title = [date, proj].filter(Boolean).join('_');
+  window.print();
+  document.title = prev;
+}
+
+/* ============================================================
+   CSV 내보내기 (fix #5 로컬 날짜)
+   ============================================================ */
+function exportCSV() {
+  const proj = document.getElementById('projectName').value || '무제';
+  const date = document.getElementById('shootingDate').value || localDateStr();  // fix #5
+  const csvRows = [['완료','순서','카테고리','촬영 항목명','중요도','소요(분)','버퍼(분)','시작 시간','종료 시간','세트/장소','비고','컷수'].join(',')];
+  rows.forEach((r, i) => {
+    csvRows.push([
+      r.done ? '완료' : '', i + 1,
+      csvEsc(r.category), csvEsc(r.title), csvEsc(r.importance),
+      r.duration, r.buffer,
+      csvEsc(r.startTime || ''), csvEsc(r.endTime || ''),
+      csvEsc(r.set), csvEsc(r.note), r.cuts || 0
+    ].join(','));
+  });
+  const blob = new Blob(['\uFEFF' + csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = Object.assign(document.createElement('a'), {
+    href:     URL.createObjectURL(blob),
+    download: `촬영타임테이블_${proj}_${date}.csv`
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   localStorage 자동 저장 — 이미지 제외 (fix #4)
+   ============================================================ */
+function serializeRows(includeImages = true) {
+  return rows.map(r => ({
+    id:         r.id,
+    category:   r.category,
+    title:      r.title,
+    importance: r.importance,
+    duration:   r.duration,
+    buffer:     r.buffer,
+    set:        r.set,
+    note:       r.note,
+    cuts:       r.cuts || 0,
+    done:       r.done || false,
+    imageData:  includeImages ? (r.imageData || '') : ''
+  }));
+}
+
+function buildState(includeImages) {
+  return {
+    project: {
+      name:      document.getElementById('projectName').value,
+      date:      document.getElementById('shootingDate').value,
+      startTime: document.getElementById('startTime').value,
+      location:  document.getElementById('location').value,
+      manager:   document.getElementById('manager').value || '',
+      memo:      document.getElementById('memo').value    || ''
+    },
+    defaultBuffer: parseInt(document.getElementById('defaultBuffer').value) || 0,
+    autoBuffer:    document.getElementById('autoBuffer').checked,
+    rows:          serializeRows(includeImages)
+  };
+}
+
+function saveCurrentState() {
+  // 1차 시도: 이미지 포함 저장
+  try {
+    localStorage.setItem('timetable_current', JSON.stringify(buildState(true)));
+    setAutosaveStatus('자동 저장됨 ' + nowTimeStr());
+    return;
+  } catch(e) {
+    if (e.name !== 'QuotaExceededError') {
+      setAutosaveStatus('저장 실패 — ' + e.message);
+      return;
+    }
+  }
+  // 2차 시도: 이미지 제외 저장 (용량 초과 fallback)
+  try {
+    localStorage.setItem('timetable_current', JSON.stringify(buildState(false)));
+    setAutosaveStatus('저장됨 (용량 부족으로 이미지 제외) ' + nowTimeStr());
+  } catch(e) {
+    setAutosaveStatus('저장 실패 — 브라우저 저장 공간이 부족합니다.');
+    console.error('[저장 오류]', e);
+  }
+}
+
+function loadCurrentState() {
+  try {
+    const raw = localStorage.getItem('timetable_current');
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (state.project) {
+      document.getElementById('projectName').value  = state.project.name      || '';
+      document.getElementById('shootingDate').value = state.project.date      || '';
+      document.getElementById('startTime').value    = state.project.startTime || '10:00';
+      document.getElementById('location').value     = state.project.location  || '';
+      document.getElementById('manager').value      = state.project.manager   || '';
+      document.getElementById('memo').value         = state.project.memo      || '';
+    }
+    document.getElementById('defaultBuffer').value = state.defaultBuffer ?? 10;
+    document.getElementById('autoBuffer').checked  = state.autoBuffer !== false;
+    // imageData 포함해서 복원 (저장된 경우)
+    rows = (state.rows || []).map(r => Object.assign(createRow(), r));
+    return true;
+  } catch(e) { return false; }
+}
+
+/* ============================================================
+   저장 / 불러오기 통합 모달
+   ============================================================ */
+
+/** 통합 모달 열기 — 이름 필드에 현재 프로젝트명 자동 입력 */
+function openFileModal() {
+  document.getElementById('templateNameInput').value =
+    document.getElementById('projectName').value || '';
+  renderTemplateList();
+  openModal('fileModal');
+}
+
+/** 현재 타임테이블 저장 */
+function saveTemplate() {
+  const name = document.getElementById('templateNameInput').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  const templates = getTemplates();
+  const state = {
+    project: {
+      name:      document.getElementById('projectName').value,
+      date:      document.getElementById('shootingDate').value,
+      startTime: document.getElementById('startTime').value,
+      location:  document.getElementById('location').value,
+      manager:   document.getElementById('manager').value || '',
+      memo:      document.getElementById('memo').value    || ''
+    },
+    defaultBuffer: parseInt(document.getElementById('defaultBuffer').value) || 0,
+    autoBuffer:    document.getElementById('autoBuffer').checked,
+    rows:          serializeRows(true)   // 이미지 포함
+  };
+  try {
+    templates.push({ id: Date.now(), name, savedAt: nowDateStr(), state });
+    if (templates.length > 20) templates.splice(0, templates.length - 20);
+    localStorage.setItem('timetable_templates', JSON.stringify(templates));
+    document.getElementById('templateNameInput').value = '';
+    renderTemplateList();   // 저장 후 목록 즉시 갱신
+    setAutosaveStatus(`"${name}" 저장됨`);
+  } catch(e) {
+    alert('저장 실패 — 저장 공간이 부족합니다. 기존 항목을 삭제해주세요.');
+  }
+}
+
+/** 목록 렌더링 */
+function renderTemplateList() {
+  const templates = getTemplates();
+  const ul = document.getElementById('templateList');
+  ul.innerHTML = '';
+  if (!templates.length) {
+    ul.innerHTML = '<li style="padding:16px 0;color:#9e9a94;font-size:13px;text-align:center;">저장된 타임테이블이 없습니다.</li>';
+    return;
+  }
+  // 최신 순으로 표시
+  [...templates].reverse().forEach(tpl => {
+    const li = document.createElement('li');
+    li.className = 'template-item';
+    li.innerHTML = `
+      <div style="flex:1;min-width:0;">
+        <div class="template-name">${escHtml(tpl.name)}</div>
+        <div class="template-meta">${tpl.savedAt} · ${(tpl.state.rows||[]).length}개 항목</div>
+      </div>
+      <button class="btn btn-primary btn-small" onclick="loadTemplate(${tpl.id})">불러오기</button>
+      <button class="btn btn-danger  btn-small" onclick="deleteTemplate(${tpl.id})">삭제</button>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+/** 불러오기 */
+function loadTemplate(id) {
+  if (!confirm('현재 작업 중인 데이터가 대체됩니다. 계속하시겠습니까?')) return;
+  const tpl = getTemplates().find(t => t.id === id);
+  if (!tpl) return;
+  const s = tpl.state;
+  if (s.project) {
+    document.getElementById('projectName').value  = s.project.name      || '';
+    document.getElementById('shootingDate').value = s.project.date      || '';
+    document.getElementById('startTime').value    = s.project.startTime || '10:00';
+    document.getElementById('location').value     = s.project.location  || '';
+    document.getElementById('manager').value      = s.project.manager   || '';
+    document.getElementById('memo').value         = s.project.memo      || '';
+  }
+  document.getElementById('defaultBuffer').value = s.defaultBuffer ?? 10;
+  document.getElementById('autoBuffer').checked  = s.autoBuffer !== false;
+  rows = (s.rows || []).map(r => Object.assign(createRow(), r, {
+    id: Date.now() + Math.random()
+  }));
+  resetSelection();
+  renderTable();
+  saveCurrentState();
+  setAutosaveStatus(`"${tpl.name}" 불러옴`);
+  closeModal('fileModal');
+}
+
+/** 삭제 */
+function deleteTemplate(id) {
+  if (!confirm('이 타임테이블을 삭제하시겠습니까?')) return;
+  localStorage.setItem('timetable_templates',
+    JSON.stringify(getTemplates().filter(t => t.id !== id)));
+  renderTemplateList();
+}
+
+function getTemplates() {
+  try { return JSON.parse(localStorage.getItem('timetable_templates') || '[]'); }
+  catch(e) { return []; }
+}
+
+/* ─ 하위 호환 — 기존 openSaveTemplateModal / openLoadTemplateModal 호출 대비 ─ */
+function openSaveTemplateModal() { openFileModal(); }
+function openLoadTemplateModal() { openFileModal(); }
+
+/* ============================================================
+   모달 유틸
+   ============================================================ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+/* ============================================================
+   이벤트 바인딩
+   ============================================================ */
+
+// 프로젝트 정보 — debounce 저장 (fix #7)
+['projectName','shootingDate','location','manager','memo'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    debouncedSave();
+    setAutosaveStatus('입력 중...');
+  });
+});
+
+// 시작 시간 — 즉시 계산, debounce 저장 (fix #7)
+document.getElementById('startTime').addEventListener('input', () => {
+  recalculateTimes();
+  updateSummary();
+  debouncedSave();
+});
+
+document.getElementById('defaultBuffer').addEventListener('input', () => debouncedSave());
+
+/* ============================================================
+   키보드 단축키
+   - ⌘/Ctrl+Enter : 새 행 추가
+   - ⌘/Ctrl+Z     : 실행 취소
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if (e.target.closest('.modal-box')) return;
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    addRow();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undo();
+  }
+});
+
+/* ============================================================
+   초기화 실행
+   ============================================================ */
+(function init() {
+  const params = new URLSearchParams(location.search);
+  const isViewMode = params.get('view') === '1';
+  const hash = location.hash.slice(1);  // '#' 제거
+
+  if (hash) {
+    // URL hash에 데이터가 있으면 hash 우선 로드
+    const state = decodeHashToState(hash);
+    if (state) {
+      const p = state.project || {};
+      document.getElementById('projectName').value  = p.name      || '';
+      document.getElementById('shootingDate').value = p.date      || '';
+      document.getElementById('startTime').value    = p.startTime || '10:00';
+      document.getElementById('location').value     = p.location  || '';
+      if (state.defaultBuffer !== undefined)
+        document.getElementById('defaultBuffer').value = state.defaultBuffer;
+      if (state.autoBuffer !== undefined)
+        document.getElementById('autoBuffer').checked = state.autoBuffer;
+      rows = (state.rows || []).map(r =>
+        Object.assign(createRow(), r, { id: Date.now() + Math.random(), imageData: '' })
+      );
+      renderTable();
+      setAutosaveStatus(isViewMode ? '읽기 전용' : '링크에서 불러옴');
+    } else {
+      // hash 파싱 실패 → localStorage 복원
+      const loaded = loadCurrentState();
+      renderTable();
+      setAutosaveStatus(loaded ? '복원됨' : '새 파일');
+    }
+  } else {
+    // hash 없으면 localStorage 복원
+    const loaded = loadCurrentState();
+    renderTable();
+    setAutosaveStatus(loaded ? '복원됨 (마지막 저장 상태)' : '새 파일');
+  }
+
+  // 읽기 전용 모드 적용
+  if (isViewMode) activateViewMode();
+
+  // 파일 불러오기 이벤트 등록
+  importFileSetup();
+})();
+</script>
+</body>
+</html>
+
   · 결과물 이미지 다중 업로드 (최대 6장) — 각 캡션 입력, 추가/삭제
   · 3P 레이아웃 자동 적응: 이미지 수에 따라 1컬럼(크게) / 2열 / 3열 그리드
   · 프로젝트 저장/불러오기 — localStorage 다중 저장, 이름 지정, 목록 관리
