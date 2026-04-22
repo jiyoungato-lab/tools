@@ -315,9 +315,19 @@ body.view-mode .view-mode-banner{display:none !important;}
 
 /* PRINT */
 @media print {
+  /* ── Light mode reset for print ── */
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
   @page{size:A4 landscape;margin:8mm 10mm 8mm 10mm;}
-  body{background:#fff !important;font-size:7pt;line-height:1.2;font-family:var(--font-base);color:#000;}
+  body{background:#fff !important;font-size:7pt;line-height:1.2;font-family:var(--font-base);color:#000 !important;}
+  .project-card, .summary-card, .table-wrapper, .toolbar-bar {
+    background:#fff !important;
+    border-color:#ccc !important;
+    box-shadow:none !important;
+  }
+  #timetable tbody td, #timetable thead th {
+    color:#000 !important;
+    background:#fff !important;
+  }
   .toolbar-bar,.progress-bar-wrap,.bulk-bar,.overtime-warn,
   .row-btn,.dur-btn,.td-actions,.td-drag,.td-select,
   thead th.th-actions,thead th.th-drag,
@@ -381,7 +391,7 @@ body.view-mode .view-mode-banner{display:none !important;}
   }
   #projectName{font-size:8.5pt;font-weight:700;min-width:50mm;}
   #shootingDate,#startTime{font-family:var(--font-mono);font-size:7pt;}
-  #startTime{color:#1877f2;}
+  #startTime{color:#1246f2 !important;}
   select.field-input{background-image:none !important;appearance:none;-webkit-appearance:none;}
 
   /* 요약 카드 */
@@ -412,7 +422,7 @@ body.view-mode .view-mode-banner{display:none !important;}
     align-items:center;
     justify-content:center;
     padding:1.5mm 5mm;
-    background:#1877f2 !important;
+    background:#5e6ad2 !important;
     text-align:center;
     min-width:0;
   }
