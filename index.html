@@ -310,48 +310,6 @@ nav {
   text-transform: uppercase;
 }
 
-/* ─── How-to ─────────────────────────────────────────────── */
-.how-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.how-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px 22px;
-}
-.how-num {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent-vivid);
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-}
-.how-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-1);
-  letter-spacing: -0.182px;
-  margin-bottom: 6px;
-}
-.how-desc {
-  font-size: 13px;
-  color: var(--text-3);
-  line-height: 1.65;
-  letter-spacing: -0.13px;
-}
-code {
-  font-family: 'SF Mono', ui-monospace, monospace;
-  font-size: 11px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 1px 5px;
-  color: var(--accent-vivid);
-}
-
 /* ─── Footer ─────────────────────────────────────────────── */
 footer {
   padding: 32px 0;
@@ -487,24 +445,6 @@ footer {
     </div>
   </section>
 
-  <section class="section">
-    <div class="section-header">
-      <span class="section-label">새 툴 추가하는 법</span>
-      <div class="section-line"></div>
-    </div>
-    <div class="how-grid">
-      <div class="how-card fade-up">
-        <div class="how-num">01</div>
-        <div class="how-title">HTML 파일 업로드</div>
-        <div class="how-desc">GitHub <code>tools</code> 저장소에 새 HTML 파일을 올립니다.<br>예: <code>tool-name.html</code></div>
-      </div>
-      <div class="how-card fade-up">
-        <div class="how-num">02</div>
-        <div class="how-title">카드 추가 요청</div>
-        <div class="how-desc">Claude에게 파일을 주면 <code>index.html</code> 카드를 자동으로 업데이트해드립니다.</div>
-      </div>
-    </div>
-  </section>
 
   <footer>
     <span class="footer-text">jiyoungato-lab — automation tools</span>
