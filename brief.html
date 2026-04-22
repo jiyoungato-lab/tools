@@ -815,12 +815,22 @@
 
   /* ===== Print ===== */
   @media print {
+    /* ── Light mode reset for print ── */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color: #000 !important;
+      background: transparent !important;
+      border-color: #ccc !important;
+      box-shadow: none !important;
+    }
     /* Reset layout constraints */
     html, body {
       overflow: visible !important;
       height: auto !important;
-      background: white !important;
+      background: #fff !important;
       display: block !important;
+      color: #000 !important;
     }
     .main {
       overflow: visible !important;
