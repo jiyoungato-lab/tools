@@ -468,6 +468,37 @@ body.view-mode .view-mode-banner{display:none !important;}
   .tbl-footer td{font-size:7pt;padding:2.5pt 4pt !important;color:#333;}
   .tbl-footer .footer-hide{display:none !important;}
   .tbl-footer .td-seq{text-align:left !important;padding-left:4pt !important;}
+
+  /* ─────────────────────────────────────────────────────────
+     인쇄용 텍스트 span — input/select 값을 직접 그린다.
+     beforeprint 훅이 [data-print-hidden] 을 입력 요소에 부여하고
+     형제 .print-val-span 을 삽입한다.
+     ───────────────────────────────────────────────────────── */
+  [data-print-hidden]{display:none !important;}
+
+  .print-val-span{
+    display:inline-block;
+    vertical-align:middle;
+    color:#000;
+    font-size:7.5pt;
+    background:transparent;
+    white-space:pre-wrap;
+    word-break:break-word;
+    max-width:100%;
+  }
+  /* 숫자 컬럼은 가운데 정렬 (input.num-input 의 text-align:center 대응) */
+  .print-val-span.num-input{display:block;text-align:center;font-family:var(--font-mono);}
+  /* 중요도 색·굵기 — 화면용 .imp-* 규칙이 그대로 적용되도록 함 */
+  .print-val-span.imp-high{font-weight:700;color:#c0392b;}
+  .print-val-span.imp-mid {font-weight:500;color:#27ae60;}
+  .print-val-span.imp-low {color:#999;}
+
+  /* 상단 프로젝트 카드의 span — 필드 폭을 채우는 블록 */
+  .field-group .print-val-span{display:block;width:100%;font-weight:500;}
+  .field-group #projectName + .print-val-span{font-size:8.5pt;font-weight:700;}
+  .field-group #shootingDate + .print-val-span,
+  .field-group #startTime    + .print-val-span{font-family:var(--font-mono);font-size:7pt;}
+  .field-group #startTime    + .print-val-span{color:#1246f2;}
 }
 
 </style>
@@ -2042,6 +2073,71 @@ document.addEventListener('keydown', e => {
     undo();
   }
 });
+
+/* ============================================================
+   인쇄 전처리 — input/select 값을 span으로 복사 후 원복
+   브라우저(특히 Chrome)는 <input>/<select> 내부 텍스트를
+   인쇄 렌더링 트리에 포함하지 않는 경우가 많다.
+   beforeprint 시점에 정적 <span>을 형제로 삽입해 값을 그리고,
+   afterprint 시점에 원복한다.
+   ============================================================ */
+(function setupPrintFix() {
+  // 색/굵기/정렬에 영향을 주는 클래스만 span에 복사한다.
+  // (cell-input/field-input 같은 레이아웃 클래스는 의도된 span 스타일과 충돌)
+  const STYLE_CLASSES = [
+    'imp-high', 'imp-mid', 'imp-low',  // 중요도 색·굵기
+    'title-input',                      // tr.cat-점심/휴식, row-done 의 title 스타일
+    'num-input'                         // 숫자 컬럼 가운데 정렬
+  ];
+
+  let injectedSpans = [];
+
+  function injectPrintSpans() {
+    // re-entrancy 가드: 직전 사이클에서 afterprint가 누락됐을 수 있음
+    removePrintSpans();
+
+    document
+      .querySelectorAll('#timetable .cell-input, .field-input')
+      .forEach(el => {
+        if (el.type === 'hidden') return;
+
+        const text = readElementValue(el);
+        if (text === '') return; // 빈 값엔 span을 만들지 않음 (DOM 노이즈 방지)
+
+        const span = document.createElement('span');
+        span.className = ['print-val-span']
+          .concat(STYLE_CLASSES.filter(c => el.classList.contains(c)))
+          .join(' ');
+        span.textContent = text;
+        el.insertAdjacentElement('afterend', span);
+        el.setAttribute('data-print-hidden', '1');
+        injectedSpans.push({ el, span });
+      });
+  }
+
+  function removePrintSpans() {
+    injectedSpans.forEach(({ el, span }) => {
+      if (span.parentNode) span.parentNode.removeChild(span);
+      el.removeAttribute('data-print-hidden');
+    });
+    injectedSpans = [];
+  }
+
+  function readElementValue(el) {
+    if (el.tagName === 'SELECT') {
+      const opt = el.options[el.selectedIndex];
+      return opt ? opt.text : '';
+    }
+    if (el.type === 'date' && el.value) {
+      const [y, m, d] = el.value.split('-');
+      return `${y}. ${m}. ${d}.`;
+    }
+    return el.value || '';
+  }
+
+  window.addEventListener('beforeprint', injectPrintSpans);
+  window.addEventListener('afterprint', removePrintSpans);
+})();
 
 /* ============================================================
    초기화 실행
