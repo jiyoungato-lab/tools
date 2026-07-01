@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>출퇴근 기록</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 45 920;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --card: #141414;
+  --card-border: #232323;
+  --lime: #c8f060;
+  --text: #f2f2f2;
+  --text-dim: #8a8a8a;
+  --text-dimmer: #555;
+  --danger: #e06060;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+body {
+  padding: 24px 20px 60px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header .date {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.clock-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.now-time {
+  font-size: 15px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 20px;
+}
+
+.checkin-btn {
+  width: 100%;
+  padding: 22px;
+  border-radius: 16px;
+  border: none;
+  background: var(--lime);
+  color: #0a0a0a;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+
+.checkin-btn:active { transform: scale(0.97); }
+
+.checkin-btn.checked {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-dim);
+}
+
+.result {
+  display: none;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--card-border);
+}
+
+.result.show { display: block; }
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.result-row .label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.result-row .value {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-row .value.lime { color: var(--lime); }
+
+.hours-select {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.hours-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hours-btn.active {
+  border-color: var(--lime);
+  color: var(--lime);
+  background: rgba(200, 240, 96, 0.08);
+}
+
+.custom-hours {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0 14px;
+}
+
+.custom-hours input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 0;
+  -moz-appearance: textfield;
+}
+
+.custom-hours input::-webkit-outer-spin-button,
+.custom-hours input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.custom-hours input::placeholder { color: var(--text-dimmer); font-weight: 400; }
+
+.custom-hours-suffix {
+  font-size: 13px;
+  color: var(--text-dimmer);
+}
+
+.reset-link {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-dimmer);
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  padding: 6px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 28px 0 10px;
+  padding: 0 2px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.history-item .date-col { font-size: 13px; color: var(--text-dim); min-width: 56px; }
+.history-item .time-col { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.history-item .arrow { color: var(--text-dimmer); font-size: 12px; margin: 0 8px; }
+.history-item .leave-col { font-size: 14px; font-weight: 600; color: var(--lime); font-variant-numeric: tabular-nums; }
+
+.empty {
+  text-align: center;
+  color: var(--text-dimmer);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+.loading { text-align: center; color: var(--text-dimmer); font-size: 13px; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="date" id="todayLabel">-</div>
+  <h1>출퇴근 기록</h1>
+</div>
+
+<div class="clock-card">
+  <div class="now-time" id="nowClock">--:--</div>
+  <button class="checkin-btn" id="checkinBtn">출근 체크</button>
+
+  <div class="result" id="result">
+    <div class="result-row">
+      <span class="label">출근시간</span>
+      <span class="value" id="checkinTimeDisplay">-</span>
+    </div>
+    <div style="margin-top: 4px;">
+      <div class="label" style="margin-bottom:8px;">근무시간</div>
+      <div class="hours-select" id="hoursSelect">
+        <button class="hours-btn" data-h="4">반차 4h</button>
+        <button class="hours-btn" data-h="8">8h</button>
+        <button class="hours-btn" data-h="9">9h</button>
+      </div>
+      <div class="custom-hours">
+        <input type="number" id="customHours" step="0.5" min="0" max="24" placeholder="직접 입력">
+        <span class="custom-hours-suffix">h</span>
+      </div>
+    </div>
+    <div class="result-row">
+      <span class="label">퇴근예정</span>
+      <span class="value lime" id="leaveTimeDisplay">-</span>
+    </div>
+    <button class="reset-link" id="resetBtn">오늘 기록 다시 입력하기</button>
+  </div>
+</div>
+
+<div class="section-title">최근 기록</div>
+<div id="historyList"><div class="loading">불러오는 중...</div></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const todayKey = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+const fmtTime = iso => {
+  const d = new Date(iso);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+};
+const fmtDateLabel = () => {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  return (d.getMonth()+1) + '월 ' + d.getDate() + '일 ' + days[d.getDay()] + '요일';
+};
+const fmtHistoryDate = key => {
+  const [y,m,dd] = key.split('-');
+  return m + '/' + dd;
+};
+
+$('todayLabel').textContent = fmtDateLabel();
+
+function tickClock() {
+  const d = new Date();
+  $('nowClock').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+let selectedHours = 8;
+let todayRecord = null;
+
+async function loadToday() {
+  try {
+    const res = await window.storage.get('attendance:' + todayKey());
+    todayRecord = res ? JSON.parse(res.value) : null;
+  } catch (e) {
+    todayRecord = null;
+  }
+  renderToday();
+}
+
+function renderToday() {
+  if (todayRecord) {
+    $('checkinBtn').textContent = '출근 완료';
+    $('checkinBtn').classList.add('checked');
+    $('result').classList.add('show');
+    $('checkinTimeDisplay').textContent = fmtTime(todayRecord.checkin);
+    selectedHours = todayRecord.hours || 8;
+    updateHoursButtons();
+    updateLeaveTime();
+  } else {
+    $('checkinBtn').textContent = '출근 체크';
+    $('checkinBtn').classList.remove('checked');
+    $('result').classList.remove('show');
+  }
+}
+
+function updateHoursButtons() {
+  document.querySelectorAll('.hours-btn').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.h) === selectedHours);
+  });
+  const presetValues = [4, 8, 9];
+  $('customHours').value = presetValues.includes(selectedHours) ? '' : selectedHours;
+}
+
+function updateLeaveTime() {
+  if (!todayRecord) return;
+  const leave = new Date(new Date(todayRecord.checkin).getTime() + selectedHours * 3600 * 1000);
+  $('leaveTimeDisplay').textContent = String(leave.getHours()).padStart(2,'0') + ':' + String(leave.getMinutes()).padStart(2,'0');
+}
+
+$('checkinBtn').addEventListener('click', async () => {
+  if (todayRecord) return;
+  const now = new Date().toISOString();
+  todayRecord = { checkin: now, hours: selectedHours };
+  try {
+    await window.storage.set('attendance:' + todayKey(), JSON.stringify(todayRecord));
+  } catch (e) {}
+  renderToday();
+  loadHistory();
+});
+
+$('resetBtn').addEventListener('click', async () => {
+  todayRecord = null;
+  try {
+    await window.storage.delete('attendance:' + todayKey());
+  } catch (e) {}
+  renderToday();
+  loadHistory();
+});
+
+$('hoursSelect').addEventListener('click', async e => {
+  const btn = e.target.closest('.hours-btn');
+  if (!btn || !todayRecord) return;
+  selectedHours = parseFloat(btn.dataset.h);
+  todayRecord.hours = selectedHours;
+  updateHoursButtons();
+  updateLeaveTime();
+  try {
+    await window.storage.set('attendance:' + todayKey(), JSON.stringify(todayRecord));
+  } catch (e) {}
+  loadHistory();
+});
+
+$('customHours').addEventListener('change', async e => {
+  if (!todayRecord) return;
+  const val = parseFloat(e.target.value);
+  if (isNaN(val) || val < 0) return;
+  selectedHours = val;
+  todayRecord.hours = selectedHours;
+  updateHoursButtons();
+  updateLeaveTime();
+  try {
+    await window.storage.set('attendance:' + todayKey(), JSON.stringify(todayRecord));
+  } catch (e) {}
+  loadHistory();
+});
+
+async function loadHistory() {
+  const listEl = $('historyList');
+  try {
+    const res = await window.storage.list('attendance:');
+    const keys = (res && res.keys) ? res.keys : [];
+    if (keys.length === 0) {
+      listEl.innerHTML = '<div class="empty">아직 기록이 없어요</div>';
+      return;
+    }
+    const sortedKeys = keys.sort().reverse().slice(0, 14);
+    const items = [];
+    for (const k of sortedKeys) {
+      try {
+        const r = await window.storage.get(k);
+        if (r) {
+          const rec = JSON.parse(r.value);
+          const dateKey = k.replace('attendance:', '');
+          items.push({ dateKey, rec });
+        }
+      } catch (e) {}
+    }
+    if (items.length === 0) {
+      listEl.innerHTML = '<div class="empty">아직 기록이 없어요</div>';
+      return;
+    }
+    listEl.innerHTML = items.map(({dateKey, rec}) => {
+      const leave = new Date(new Date(rec.checkin).getTime() + (rec.hours || 8) * 3600 * 1000);
+      const leaveStr = String(leave.getHours()).padStart(2,'0') + ':' + String(leave.getMinutes()).padStart(2,'0');
+      return '<div class="history-item">' +
+        '<span class="date-col">' + fmtHistoryDate(dateKey) + '</span>' +
+        '<span class="time-col">' + fmtTime(rec.checkin) + '</span>' +
+        '<span class="arrow">→</span>' +
+        '<span class="leave-col">' + leaveStr + '</span>' +
+        '</div>';
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = '<div class="empty">불러오기에 실패했어요</div>';
+  }
+}
+
+loadToday();
+loadHistory();
+</script>
+</body>
+</html>
